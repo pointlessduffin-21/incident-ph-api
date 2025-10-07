@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  sms-apis:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sms-apis
+    ports:
+      - "6361:6361"
+    environment:
+      - NODE_ENV=production
+      - PORT=6361
+      - TOMTOM_API_KEY=${TOMTOM_API_KEY}
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:6361/api', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - sms-network
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+networks:
+  sms-network:
+    driver: bridge
