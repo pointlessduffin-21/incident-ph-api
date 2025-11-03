@@ -8,11 +8,14 @@ npm install
 npx playwright install chromium
 ```
 
-### Step 2: Configure API Key
-Your `.env` file is already configured with TomTom API key! ✅
+### Step 2: Review Environment Variables
+Copy `env.example` and adjust if you need to override defaults (e.g., custom ports or alternate Twitter URLs):
 ```bash
-TOMTOM_API_KEY=DsHbcQ5uo9SNr7WobGoY5CbAXT4XlXEQ
+cp env.example .env
 ```
+Key optional overrides:
+- `MMDA_TWITTER_URL`, `PAGASA_TWITTER_URL` – change if the official handles move
+- `TWITTER_PROXY_BASE` – proxy endpoint for unauthenticated Twitter access (defaults to https://r.jina.ai/https://x.com)
 
 ### Step 3: Start the Server
 ```bash
@@ -38,7 +41,7 @@ curl http://localhost:3000/api/phivolcs/earthquakes
 
 ## 📊 Available Endpoints
 
-### MMDA Traffic (Powered by TomTom)
+### MMDA Traffic Alerts (Twitter/X)
 - `GET /api/mmda/traffic` - All traffic incidents
 - `GET /api/mmda/highways` - List of highways
 - `GET /api/mmda/traffic/:highwayId` - Traffic by highway (e.g., EDSA, C5)
@@ -132,9 +135,9 @@ npm run start:dev
 ```
 
 ### "Traffic data unavailable"?
-- Check `.env` file has `TOMTOM_API_KEY`
-- Verify API key at https://developer.tomtom.com/
-- Restart server after adding key
+- Ensure Playwright Chromium was installed (`npx playwright install chromium`)
+- Verify the host can reach `https://x.com/mmda`
+- Restart the server to clear cache
 
 ### Playwright issues?
 ```bash
@@ -155,7 +158,7 @@ For complete API documentation, see:
 ## 🎯 Next Steps
 
 1. ✅ Server is running
-2. ✅ TomTom API key configured
+2. ✅ Playwright browsers installed
 3. ✅ All endpoints functional
 4. 📖 Read full documentation
 5. 🚀 Build your application!

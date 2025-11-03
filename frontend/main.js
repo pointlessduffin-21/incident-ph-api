@@ -50,23 +50,32 @@ const renderPagasa = async () => {
   try {
     const response = await fetch(`${API_BASE}/pagasa/forecast`);
     const payload = await response.json();
-    const firstRegion = Array.isArray(payload?.data?.regionSummaries)
-      ? payload.data.regionSummaries[0]
+    const firstUpdate = Array.isArray(payload?.data?.updates)
+      ? payload.data.updates[0]
       : undefined;
 
-    if (!firstRegion) {
-      renderFallback(container, 'No PAGASA forecast data is available right now.');
+    if (!firstUpdate) {
+      renderFallback(container, 'No PAGASA updates available right now.');
       return;
     }
 
-    const alerts = (firstRegion?.advisories || []).map((item) => `• ${item}`).join('\n');
+    const tags = [firstUpdate.type]
+      .filter(Boolean)
+      .map((label) => `<span class="tag">${label}</span>`)
+      .join('');
+    const tagRow = tags ? `<div class="tag-row">${tags}</div>` : '';
+
+    const link = firstUpdate.url
+      ? `<p><a href="${firstUpdate.url}" target="_blank" rel="noopener">View on X</a></p>`
+      : '';
 
     container.removeAttribute('data-loading');
     container.innerHTML = `
-      <p><strong>${firstRegion.region || 'Region'}</strong></p>
-      <p class="muted">Issued: ${formatDate(firstRegion.issuedAt)}</p>
-      <p>${firstRegion.summary || 'No summary provided.'}</p>
-      ${alerts ? `<pre>${alerts}</pre>` : ''}
+      <p>${firstUpdate.text || 'No update text.'}</p>
+      <p class="muted">Source: ${firstUpdate.source || 'PAGASA Twitter'}</p>
+      <p class="muted">Updated: ${formatDate(firstUpdate.timestamp)}</p>
+      ${link}
+      ${tagRow}
     `;
   } catch (error) {
     renderFallback(container, 'Unable to load PAGASA forecast. Check API server.');

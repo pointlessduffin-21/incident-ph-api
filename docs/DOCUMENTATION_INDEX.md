@@ -27,21 +27,20 @@ Quick reference for:
 
 ### 3. **IMPLEMENTATION_NOTES.md** (Technical Details)  
 Technical implementation notes:
-- Playwright integration for PAGASA
-- TomTom Traffic API setup
-- Architecture decisions
-- Cost analysis
+- Playwright integration for PAGASA and MMDA Twitter scraping
+- Scraper architecture decisions
+- Cost analysis & mitigation strategies
 - Future improvements
 
 ---
 
 ## 🚀 Key Features Implemented
 
-### 1. **MMDA Traffic** (Tom Tom API)
-✅ Real-time traffic for 12 Metro Manila highways  
-✅ Traffic incidents with severity levels  
-✅ Delay estimates and incident types  
-✅ Location-specific filtering  
+### 1. **MMDA Traffic Alerts** (Twitter/X)
+✅ Near real-time advisories from @MMDA  
+✅ Keyword-based filtering for 12 Metro Manila highways  
+✅ Tweet metadata (timestamp, link)  
+✅ Location-aware keyword suggestions  
 
 **Highways Monitored:**
 - EDSA, C5, Commonwealth Ave, Quezon Ave
@@ -93,12 +92,13 @@ GET /api/phivolcs/volcanoes        # Volcano monitoring
 
 ### Environment Variables (.env)
 ```bash
-# TomTom Traffic API Key (Already configured! ✅)
-TOMTOM_API_KEY=DsHbcQ5uo9SNr7WobGoY5CbAXT4XlXEQ
-
-# Server Configuration  
+# Server Configuration
 PORT=3000
 NODE_ENV=development
+
+# Optional overrides
+MMDA_TWITTER_URL=https://x.com/mmda
+PAGASA_TWITTER_URL=https://x.com/dost_pagasa
 ```
 
 ---
@@ -144,23 +144,22 @@ curl http://localhost:3000/api/phivolcs/earthquakes
 ### Caching Strategy
 | Endpoint | Cache Duration |
 |----------|---------------|
-| MMDA Traffic | 5 minutes |
+| MMDA Traffic | 10 minutes |
 | PAGASA Forecast | 30 minutes |
 | PHIVOLCS Earthquakes | 5 minutes |
 
 ---
 
-## 💰 API Costs
+## 💰 Runtime Costs
 
-### TomTom Free Tier
-- **Limit**: 2,500 requests/day
-- **With caching**: ~288 requests/day used
-- **Headroom**: 8.7x capacity available
-- **Overage**: $0.50 per 1,000 requests
+### Twitter/X Scraping
+- **Limit**: Subject to rate limiting; keep requests low via caching
+- **Mitigation**: 10-minute cache for MMDA alerts to avoid repeated navigation
+- **Fallback**: Consider rotating proxies or backup feeds if blocked
 
 ### Playwright
 - **Cost**: FREE (open-source)
-- **Resource**: ~150MB RAM per browser
+- **Resource**: ~150 MB RAM per browser
 
 ---
 
@@ -203,7 +202,7 @@ curl http://localhost:3000/api/phivolcs/latest-earthquake
 ## 🛠️ Technology Stack
 
 - **Framework**: NestJS 10.3.0 (TypeScript)
-- **Traffic API**: TomTom Traffic API
+- **Traffic Alerts**: Twitter/X (scraped via Playwright)
 - **Web Scraping**: Playwright (Twitter), Cheerio (HTML)
 - **Caching**: In-memory cache-manager
 - **HTTP Client**: Axios
@@ -223,9 +222,9 @@ curl http://localhost:3000/api/phivolcs/latest-earthquake
 
 ## 🚨 Important Notes
 
-### TomTom API Key
-✅ Already configured in `.env`  
-Key: `DsHbcQ5uo9SNr7WobGoY5CbAXT4XlXEQ`
+### Twitter/X Scraping
+✅ Requires outbound access to `https://x.com`  
+⚠️ Respect rate limits; keep cache TTLs at 10 minutes or higher
 
 ### Playwright
 Requires Chromium browser:
@@ -264,4 +263,5 @@ Happy coding! 🚀
 ---
 
 **Documentation Created**: October 2, 2025  
-**Version**: 2.0.0 (Playwright + TomTom Integration)
+**Last Updated**: November 1, 2025  
+**Version**: 2.1.0 (Playwright Twitter Integration)

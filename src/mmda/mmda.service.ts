@@ -2,12 +2,17 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
-import { chromium } from 'playwright';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class MmdaService {
   private readonly logger = new Logger(MmdaService.name);
   private readonly mmdaTwitterUrl: string;
+  private readonly twitterProxyBase: string;
+  private readonly mmdaHandle: string;
 
   // Major highways with their coordinates
   private readonly highways = [
@@ -27,9 +32,12 @@ export class MmdaService {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     this.mmdaTwitterUrl = this.configService.get('MMDA_TWITTER_URL') || 'https://x.com/mmda';
+    this.twitterProxyBase = this.configService.get('TWITTER_PROXY_BASE') || 'https://r.jina.ai/https://x.com';
+    this.mmdaHandle = this.extractHandle(this.mmdaTwitterUrl) || 'mmda';
   }
 
   async getTrafficData() {
@@ -43,92 +51,34 @@ export class MmdaService {
         return cached;
       }
 
-      this.logger.log('Scraping MMDA Twitter feed for traffic alerts...');
+      this.logger.log('Fetching MMDA alerts via Twitter proxy feed...');
 
-      const browser = await chromium.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
+      const feed = await this.fetchTwitterFeed(this.mmdaHandle);
+      const parsedAlerts = this.extractMmdaAlerts(feed);
 
-      const context = await browser.newContext({
-        userAgent:
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        viewport: { width: 1920, height: 1080 },
-      });
-
-      const page = await context.newPage();
-
-      try {
-        await page.goto(this.mmdaTwitterUrl, {
-          waitUntil: 'networkidle',
-          timeout: 30000,
-        });
-
-        await page.waitForSelector('article[data-testid="tweet"]', { timeout: 15000 });
-
-        const alerts = await page.evaluate(() => {
-          const tweetArticles = document.querySelectorAll('article[data-testid="tweet"]');
-          const mmdaAlerts: any[] = [];
-
-          tweetArticles.forEach((article, index) => {
-            if (index >= 30) return; // only inspect the latest 30 tweets
-
-            const tweetTextElement = article.querySelector('[data-testid="tweetText"]');
-            const text = tweetTextElement ? tweetTextElement.textContent?.trim() || '' : '';
-
-            if (!text) {
-              return;
-            }
-
-            const normalized = text.replace(/\s+/g, ' ').trim();
-            if (!normalized.toUpperCase().startsWith('MMDA ALERT')) {
-              return;
-            }
-
-            const timeElement = article.querySelector('time');
-            const timestamp = timeElement ? timeElement.getAttribute('datetime') : new Date().toISOString();
-
-            const statusAnchor = article.querySelector<HTMLAnchorElement>('a[href*="/status/"]');
-            const tweetUrl = statusAnchor ? statusAnchor.href : 'https://x.com/mmda';
-
-            mmdaAlerts.push({
-              text: normalized,
-              timestamp,
-              url: tweetUrl,
-              type: 'mmda_alert',
-              source: 'MMDA Twitter (@MMDA)',
-            });
-          });
-
-          return mmdaAlerts;
-        });
-
-        await browser.close();
-
-        const alertsWithMetadata = alerts.map(alert => ({
-          ...alert,
-          lastSeen: new Date().toISOString(),
-        }));
-
-        if (alertsWithMetadata.length === 0) {
-          this.logger.warn('No MMDA ALERT tweets detected in the latest feed');
-        }
-
-        const data = {
-          count: alertsWithMetadata.length,
-          alerts: alertsWithMetadata,
-          source: 'MMDA Twitter Official Feed (@MMDA)',
-          lastUpdated: new Date().toISOString(),
-          note: 'Only tweets starting with "MMDA ALERT" are included.',
-        };
-
-        await this.cacheManager.set(cacheKey, data, 600000); // 10 minutes
-
-        return data;
-      } catch (browserError) {
-        await browser.close();
-        throw browserError;
+      if (parsedAlerts.length === 0) {
+        this.logger.warn('No MMDA ALERT tweets detected in the proxy feed');
       }
+
+      const alertsWithMetadata = parsedAlerts.map(alert => ({
+        ...alert,
+        lastSeen: new Date().toISOString(),
+      }));
+
+      const data = {
+        count: alertsWithMetadata.length,
+        alerts: alertsWithMetadata,
+        source: 'MMDA Twitter feed via public proxy (@MMDA)',
+        lastUpdated: new Date().toISOString(),
+        note: 'Only tweets starting with "MMDA ALERT" are included.',
+      };
+
+      await this.cacheManager.set(cacheKey, data, 600000); // 10 minutes
+
+      // Persist normalized alerts for durability/analytics
+      await this.persistAlerts(alertsWithMetadata);
+
+      return data;
     } catch (error) {
       this.logger.error('Error fetching MMDA traffic alerts:', error.message);
       
@@ -143,7 +93,7 @@ export class MmdaService {
           severity: 'info',
         }],
         source: 'MMDA Alert Service',
-        note: 'Ensure the server can reach https://x.com/mmda and Playwright is installed.',
+        note: 'Ensure the server can reach https://x.com/mmda or configure TWITTER_PROXY_BASE.',
         error: error.message,
         lastUpdated: new Date().toISOString(),
       };
@@ -237,6 +187,133 @@ export class MmdaService {
     } catch (error) {
       this.logger.error(`Error fetching traffic for highway ${highwayId}:`, error.message);
       throw error;
+    }
+  }
+
+  private extractHandle(url: string): string {
+    return url
+      .replace(/^https?:\/\/(www\.)?(x|twitter)\.com\//i, '')
+      .replace(/^@/, '')
+      .split(/[/?]/)[0]
+      .trim();
+  }
+
+  private buildProxyUrl(handle: string): string {
+    const base = (this.twitterProxyBase || '').replace(/\/$/, '');
+    if (!base) {
+      return `https://r.jina.ai/https://x.com/${handle}`;
+    }
+
+    if (base.includes('{handle}')) {
+      return base.replace('{handle}', handle);
+    }
+
+    return `${base}/${handle}`;
+  }
+
+  private async fetchTwitterFeed(handle: string): Promise<string> {
+    const url = this.buildProxyUrl(handle);
+    const response = await firstValueFrom(
+      this.httpService.get(url, {
+        timeout: 15000,
+        headers: {
+          'user-agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      }),
+    );
+
+    return typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+  }
+
+  private extractMmdaAlerts(feed: string) {
+    const lines = feed
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    const alerts = lines
+      .filter(line => line.toUpperCase().startsWith('MMDA ALERT'))
+      .slice(0, 30)
+      .map(line => {
+        const text = this.normalizeMarkdown(line);
+        return {
+          text,
+          timestamp: this.deriveTimestamp(text),
+          url: this.mmdaTwitterUrl,
+          type: 'mmda_alert',
+          source: 'MMDA Twitter (@MMDA)',
+        };
+      });
+
+    return alerts;
+  }
+
+  private normalizeMarkdown(text: string): string {
+    return text
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private deriveTimestamp(text: string): string {
+    const match = text.match(/as of ([0-9]{1,2}:[0-9]{2} [AP]M)/i);
+    if (!match) {
+      return new Date().toISOString();
+    }
+
+    const timeString = match[1];
+    const now = new Date();
+    const [time, meridiem] = timeString.split(' ');
+    const [hoursPart, minutesPart] = time.split(':');
+    let hours = parseInt(hoursPart, 10);
+    const minutes = parseInt(minutesPart, 10);
+
+    if (meridiem.toUpperCase() === 'PM' && hours < 12) {
+      hours += 12;
+    }
+
+    if (meridiem.toUpperCase() === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    const timestamp = new Date(now);
+    timestamp.setHours(hours, minutes, 0, 0);
+
+    // If the derived time is in the future (e.g., past midnight), roll back one day
+    if (timestamp.getTime() > now.getTime()) {
+      timestamp.setDate(timestamp.getDate() - 1);
+    }
+
+    return timestamp.toISOString();
+  }
+
+  private async persistAlerts(alerts: any[]): Promise<void> {
+    try {
+      const dir = path.resolve(process.cwd(), 'data');
+      const filePath = path.join(dir, 'mmda-alerts.json');
+      await fs.mkdir(dir, { recursive: true });
+
+      let existing: any[] = [];
+      try {
+        const raw = await fs.readFile(filePath, 'utf-8');
+        existing = JSON.parse(raw);
+      } catch (_) {
+        existing = [];
+      }
+
+      // De-duplicate by text+timestamp
+      const key = (a: any) => `${a.text}|${a.timestamp}`;
+      const map = new Map(existing.map(a => [key(a), a]));
+      alerts.forEach(a => map.set(key(a), a));
+
+      const merged = Array.from(map.values())
+        .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
+
+      await fs.writeFile(filePath, JSON.stringify(merged, null, 2), 'utf-8');
+    } catch (err: any) {
+      this.logger.warn(`Failed to persist MMDA alerts: ${err?.message || err}`);
     }
   }
 }

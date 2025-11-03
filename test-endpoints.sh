@@ -91,14 +91,14 @@ test_endpoint \
 
 # Test MMDA Endpoints
 echo -e "${YELLOW}╔════════════════════════════════════════╗${NC}"
-echo -e "${YELLOW}║     MMDA Traffic Tests (TomTom)       ║${NC}"
+echo -e "${YELLOW}║   MMDA Traffic Tests (Twitter/X)       ║${NC}"
 echo -e "${YELLOW}╚════════════════════════════════════════╝${NC}"
 echo ""
 
 test_endpoint \
     "MMDA - All Traffic" \
     "/api/mmda/traffic" \
-    "Real-time traffic incidents for all highways"
+    "Latest MMDA alert tweets for all highways"
 
 test_endpoint \
     "MMDA - Highways List" \
@@ -113,7 +113,7 @@ test_endpoint \
 test_endpoint \
     "MMDA - C5 Traffic" \
     "/api/mmda/traffic/C5" \
-    "Traffic incidents on C5 Road"
+    "Traffic alerts mentioning C5 Road"
 
 # Test PAGASA Endpoints
 echo -e "${YELLOW}╔════════════════════════════════════════╗${NC}"

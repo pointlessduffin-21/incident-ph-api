@@ -19,19 +19,9 @@ echo ""
 # Check if .env exists
 if [ ! -f .env ]; then
     echo -e "${RED}❌ .env file not found${NC}"
-    echo -e "${YELLOW}Creating .env from .env.example...${NC}"
-    cp .env.example .env
-    echo -e "${YELLOW}⚠️  Please add your TOMTOM_API_KEY to .env${NC}"
-    echo -e "${YELLOW}   Get key at: https://developer.tomtom.com/${NC}"
-    exit 1
-fi
-
-# Check if TOMTOM_API_KEY is set
-if ! grep -q "TOMTOM_API_KEY=" .env || grep -q "TOMTOM_API_KEY=your_api_key_here" .env; then
-    echo -e "${RED}❌ TOMTOM_API_KEY not configured in .env${NC}"
-    echo -e "${YELLOW}   Please add your TomTom API key to .env file${NC}"
-    echo -e "${YELLOW}   Get key at: https://developer.tomtom.com/${NC}"
-    exit 1
+    echo -e "${YELLOW}Creating .env from env.example...${NC}"
+    cp env.example .env
+    echo -e "${YELLOW}⚠️  Review .env for optional overrides (ports, Twitter URLs)${NC}"
 fi
 
 echo -e "${GREEN}✅ Environment configured${NC}"

@@ -451,11 +451,17 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## FAQ
 
-### Q: How do I update the TomTom API key?
+### Q: MMDA alerts stopped updating in Docker. What should I check?
 
 ```bash
-# Update .env file, then restart
-docker-compose restart
+# 1. Ensure Playwright Chromium dependencies are available in the image
+docker-compose exec api npx playwright install chromium
+
+# 2. Verify the container can reach Twitter/X
+docker-compose exec api curl -I https://x.com/mmda
+
+# 3. Restart the service after adjustments
+docker-compose restart api
 ```
 
 ### Q: Container exits immediately

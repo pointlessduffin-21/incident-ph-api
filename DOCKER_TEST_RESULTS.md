@@ -18,24 +18,24 @@
   - Returns API information and service list
   - Response time: < 50ms
 
-#### MMDA Traffic (TomTom API)
+#### MMDA Traffic Alerts (Twitter/X)
 - **GET /api/mmda/traffic** - ✅ **SUCCESS** (200 OK)
-  - Real-time traffic incidents for all highways
-  - Currently 0 incidents (normal traffic conditions)
-  - TomTom API integration working
+  - Latest `MMDA ALERT` tweets scraped via Playwright
+  - Currently 0 alerts (quiet period)
+  - Twitter scraper functioning inside container
   
 - **GET /api/mmda/highways** - ✅ **SUCCESS** (200 OK)
   - Lists all 12 monitored highways
   - Returns: EDSA, C5, Commonwealth, Quezon, España, Marcos, Ortigas, Shaw, Roxas, SLEX, NLEX, Skyway
-  - With coordinates for each highway
+  - Includes coordinates for keyword matching
   
 - **GET /api/mmda/traffic/EDSA** - ✅ **SUCCESS** (200 OK)
-  - EDSA-specific traffic data
-  - 0 current incidents
+  - Filters alerts mentioning EDSA
+  - 0 current alerts
   
 - **GET /api/mmda/traffic/C5** - ✅ **SUCCESS** (200 OK)
-  - C5 Road-specific traffic data
-  - 0 current incidents
+  - Filters alerts mentioning C5 Road
+  - 0 current alerts
 
 #### PAGASA Weather (Playwright)
 - **GET /api/pagasa/forecast** - ✅ **SUCCESS** (200 OK)
@@ -78,12 +78,11 @@
 
 ### ✅ Fully Working Services
 
-1. **MMDA Traffic (TomTom API)**
-   - ✅ All highways monitored (12 highways)
-   - ✅ Real-time incident detection
+1. **MMDA Traffic Alerts (Twitter/X)**
+   - ✅ All highways monitored (12 highways via keyword matching)
+   - ✅ Near real-time alert ingestion (tweets)
    - ✅ Highway-specific filtering
-   - ✅ Severity levels (critical/major/moderate/minor/low)
-   - ✅ 5-minute caching
+   - ✅ 10-minute caching to respect rate limits
    - **Status:** Production-ready
 
 2. **PHIVOLCS Earthquakes**
@@ -123,7 +122,7 @@
 - ✅ Chromium browser (for Playwright)
 - ✅ 173 Alpine Linux packages for GUI support
 - ✅ All Node.js dependencies
-- ✅ TomTom API integration
+- ✅ Playwright-based Twitter scrapers
 - ✅ Cheerio web scraping
 - ✅ Cache Manager
 
@@ -139,7 +138,7 @@
 
 ### Response Times (measured)
 - **Root API:** < 50ms
-- **MMDA Traffic:** ~300ms (TomTom API call + processing)
+- **MMDA Traffic:** ~2.5s (Playwright launch + tweet parsing)
 - **MMDA Highways:** < 100ms (in-memory)
 - **PHIVOLCS Earthquakes:** ~1.5s (web scraping + parsing 742 records)
 - **PHIVOLCS Latest:** < 500ms
@@ -148,14 +147,14 @@
 - **First request:** Full API/scraping time
 - **Cached requests:** < 5ms
 - **Cache durations:**
-  - MMDA Traffic: 5 minutes
+  - MMDA Traffic: 10 minutes
   - PAGASA Forecast: 30 minutes
   - PHIVOLCS Earthquakes: 5 minutes
 
 ### Resource Usage
 - **Memory:** ~200-250MB (under 512MB limit)
 - **CPU:** < 10% idle, < 50% during scraping
-- **Network:** Minimal (TomTom API + occasional scraping)
+- **Network:** Minimal (Twitter/X scraping + PHIVOLCS)
 
 ---
 
@@ -170,8 +169,8 @@
 cd sms-apis
 
 # Configure environment
-cp .env.example .env
-# Add your TOMTOM_API_KEY to .env
+cp env.example .env
+# Adjust optional overrides (ports, Twitter URLs)
 
 # Start container
 docker-compose up -d
@@ -289,7 +288,7 @@ Always check the `success` field before processing data.
 ### What's Working
 ✅ Docker containerization complete  
 ✅ 12/12 endpoints tested and functional  
-✅ TomTom Traffic API integration working  
+✅ MMDA Twitter/X scraper working  
 ✅ PHIVOLCS earthquake scraping working (742 earthquakes)  
 ✅ Proper error handling everywhere  
 ✅ Caching implemented  
@@ -312,7 +311,7 @@ Always check the `success` field before processing data.
 - [x] Docker image built successfully
 - [x] Container starts without errors
 - [x] All endpoints responding with HTTP 200
-- [x] MMDA Traffic (TomTom) working
+- [x] MMDA Traffic (Twitter/X) working
 - [x] PHIVOLCS Earthquakes working (742 records)
 - [x] Error handling implemented
 - [x] Caching implemented

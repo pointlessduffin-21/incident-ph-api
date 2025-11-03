@@ -7,9 +7,11 @@ A comprehensive NestJS-based REST API providing real-time access to Philippine g
 
 ## 🚀 Features
 
-- **MMDA Traffic Information**: Real-time traffic incidents powered by TomTom Traffic API (12 major highways)
+- **MMDA Traffic Alerts**: Near real-time advisories scraped from the official MMDA Twitter/X feed
 - **PAGASA Weather Forecasts**: Live updates from PAGASA Twitter using Playwright browser automation
 - **PHIVOLCS Data**: Earthquake and volcanic activity monitoring via web scraping
+- **Typhoon Tracking**: Real-time tropical cyclone data from JTWC and GDACS
+- **Interactive Swagger UI**: Test all endpoints directly from your browser
 - Built-in intelligent caching (5-30 min TTL)
 - Robust error handling and rate limiting
 - RESTful API design
@@ -33,32 +35,25 @@ cd sms-apis
 npm install
 ```
 
-3. Install Playwright browsers (required for PAGASA weather scraping):
+3. Install Playwright browsers (required for MMDA and PAGASA scraping):
 ```bash
 npx playwright install chromium
 ```
 
-4. Create a `.env` file based on `.env.example`:
+4. Create a `.env` file based on `env.example` and adjust as needed:
 ```bash
-cp .env.example .env
+cp env.example .env
 ```
 
-5. Configure your environment variables in `.env`:
+5. Key environment variables:
 ```env
-# TomTom Traffic API Key (Required for MMDA traffic)
-# Get free key at: https://developer.tomtom.com/
-TOMTOM_API_KEY=your_api_key_here
-
-# Server Configuration
+# Optional overrides
 PORT=3000
 NODE_ENV=development
+MMDA_TWITTER_URL=https://x.com/mmda
+PAGASA_TWITTER_URL=https://x.com/dost_pagasa
+TWITTER_PROXY_BASE=https://r.jina.ai/https://x.com
 ```
-
-**Getting TomTom API Key:**
-1. Visit https://developer.tomtom.com/
-2. Sign up for a free account
-3. Create API key for Traffic API (Free Tier: 2,500 requests/day)
-4. Add key to `.env` file
 
 ## 🏃 Running the Application
 
@@ -75,7 +70,22 @@ npm run start:prod
 
 The API will be available at `http://localhost:3000/api`
 
-## 📚 Documentation
+## 📚 API Documentation
+
+### Swagger UI (Interactive)
+
+Access the interactive Swagger documentation at:
+```
+http://localhost:3000/api/docs
+```
+
+The Swagger UI provides:
+- **Try it out** buttons to test endpoints directly
+- Complete API schemas and response examples
+- Request/response models
+- Organized by service tags (MMDA, PAGASA, PHIVOLCS, ACLED, Typhoon)
+
+### Documentation Files
 
 Comprehensive documentation is available in the `docs/` folder:
 
@@ -235,12 +245,63 @@ GET /api/phivolcs/volcanoes/mayon
 
 ---
 
+### Typhoon Tracking Endpoints
+
+#### Get Active Typhoons
+```http
+GET /api/typhoon/active
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [
+    {
+      "name": "Typhoon 31W (Kalmaegi)",
+      "internationalName": "Kalmaegi",
+      "designation": "31W",
+      "category": "Typhoon",
+      "maxWinds": "Warning #09",
+      "date": "03/0900Z",
+      "affectedAreas": ["Northwest Pacific/North Indian Ocean"],
+      "status": "Active",
+      "description": "Active tropical cyclone 31W (Kalmaegi). Latest warning #09 issued.",
+      "source": "JTWC (US Navy)",
+      "coordinates": null,
+      "trackImageUrl": "https://www.metoc.navy.mil/jtwc/products/wp3125.gif",
+      "satelliteImageUrl": "https://www.metoc.navy.mil/jtwc/products/31W_030600sair.jpg",
+      "advisoryUrl": "https://www.metoc.navy.mil/jtwc/products/wp3125web.txt"
+    }
+  ],
+  "timestamp": "2025-11-03T13:45:19.395Z",
+  "sources": ["JTWC", "GDACS"]
+}
+```
+
+#### Get JTWC Data Only
+```http
+GET /api/typhoon/jtwc
+```
+
+#### Get GDACS Data Only
+```http
+GET /api/typhoon/gdacs
+```
+
+**Data Sources:**
+- **JTWC (Joint Typhoon Warning Center)**: US Navy/NOAA RSS feed with track forecasts and satellite imagery
+- **GDACS (Global Disaster Alert and Coordination System)**: UN/EC GeoJSON feed with global tropical cyclone data
+
+---
+
 ## 🏗️ Project Structure
 
 ```
 sms-apis/
 ├── src/                        # Source code
-│   ├── mmda/                   # MMDA traffic module (TomTom-powered)
+│   ├── mmda/                   # MMDA traffic module (Twitter-scraping)
 │   │   ├── mmda.controller.ts
 │   │   ├── mmda.service.ts
 │   │   └── mmda.module.ts
@@ -252,6 +313,14 @@ sms-apis/
 │   │   ├── phivolcs.controller.ts
 │   │   ├── phivolcs.service.ts
 │   │   └── phivolcs.module.ts
+│   ├── acled/                 # ACLED conflict data module
+│   │   ├── acled.controller.ts
+│   │   ├── acled.service.ts
+│   │   └── acled.module.ts
+│   ├── typhoon/               # Typhoon tracking module (JTWC + GDACS)
+│   │   ├── typhoon.controller.ts
+│   │   ├── typhoon.service.ts
+│   │   └── typhoon.module.ts
 │   ├── app.controller.ts       # Root controller
 │   ├── app.module.ts           # Root module
 │   └── main.ts                 # Application entry point
@@ -261,7 +330,7 @@ sms-apis/
 │   ├── IMPLEMENTATION_NOTES.md # Technical details
 │   └── DOCUMENTATION_INDEX.md  # Documentation hub
 ├── .env                        # Environment configuration
-├── .env.example               # Environment template
+├── env.example                # Environment template
 ├── package.json               # Dependencies
 ├── tsconfig.json              # TypeScript config
 ├── nest-cli.json              # NestJS config
@@ -273,13 +342,12 @@ sms-apis/
 ### Data Sources & Implementation
 
 #### 1. MMDA Traffic Information
-- **Method**: TomTom Traffic API Integration
-- **Source**: TomTom Traffic API (professional traffic data provider)
-- **Coverage**: 12 major Metro Manila highways (EDSA, C5, Commonwealth, etc.)
-- **Update Frequency**: 5 minutes cache
-- **Reliability**: ⭐⭐⭐⭐⭐ (Enterprise-grade API)
-- **Free Tier**: 2,500 requests/day
-- **Actual Usage**: ~288 requests/day (with caching)
+- **Method**: Playwright-powered scraping of the official MMDA Twitter/X alerts
+- **Source**: MMDA Twitter/X (@MMDA)
+- **Coverage**: 12 major Metro Manila highways (EDSA, C5, Commonwealth, etc.)*
+- **Update Frequency**: 10-minute cache
+- **Reliability**: ⭐⭐⭐ (Depends on Twitter layout/rate limits)
+- **Notes**: Requires Playwright Chromium runtime
 
 #### 2. PAGASA Weather Forecast
 - **Method**: Playwright Browser Automation
@@ -314,21 +382,12 @@ All endpoints implement intelligent caching:
 - Respects API rate limits
 - Better user experience
 
-## 💰 API Costs & Usage
+## 💰 Runtime Costs & Usage
 
-### TomTom Traffic API
-- **Free Tier**: 2,500 requests/day
-- **Actual Usage**: ~288 requests/day (with 5-min caching)
-- **Headroom**: 8.7x capacity available
-- **Overage Cost**: $0.50 per 1,000 requests (if exceeded)
-- **Monthly Cost**: $0 (well within free tier)
-
-### Playwright Browser Automation
-- **Cost**: FREE (open-source)
-- **Resource Usage**: ~150MB RAM per browser instance
-- **One-time Setup**: `npx playwright install chromium`
-
-### Total Monthly Cost: **$0.00** ✅
+- **Twitter/X scraping**: No direct API costs, but subject to public site rate limits and anti-bot controls.
+- **Playwright automation**: Open-source; expect ~150 MB RAM per headless Chromium instance during scrape.
+- **HTTP scraping (PHIVOLCS)**: No fees; be mindful of request frequency to respect the source.
+- **Total recurring fees**: **$0.00** — only infrastructure costs for running the service.
 
 ## 🌟 Monitored Highways
 
@@ -349,29 +408,30 @@ All endpoints implement intelligent caching:
 
 Each highway monitored with ~2km radius for comprehensive coverage.
 
+*Highway coverage is inferred from keywords within MMDA alert tweets; accuracy depends on the phrasing used in each advisory.*
+
 ## ⚠️ Important Notes
 
 ### Why This Approach?
 
 Philippine government agencies have limited public APIs. This project addresses the gap through:
-1. **Enterprise Traffic API** (TomTom) - Professional-grade traffic data
-2. **Browser Automation** (Playwright) - Access JavaScript-rendered Twitter content
-3. **Web Scraping** (Cheerio) - Extract data from public websites
+1. **Official social feed scraping** (Playwright + Twitter/X) - Captures MMDA and PAGASA advisories direct from source
+2. **Browser Automation** (Playwright) - Handles dynamic, JavaScript-rendered pages such as Twitter/X
+3. **Web Scraping** (Cheerio) - Extracts structured data from PHIVOLCS public pages
 
 ### Trade-offs
 
 **Advantages:**
-- ✅ Reliable, enterprise-grade traffic data (TomTom)
-- ✅ Real-time weather updates from official source (PAGASA Twitter)
+- ✅ Real-time alerts from official MMDA and PAGASA social channels
 - ✅ Built-in caching and error handling
 - ✅ Free for typical usage
-- ✅ Easy to maintain and update
+- ✅ Easy to extend to additional social or web sources
 
 **Considerations:**
-- ⚠️ TomTom API key required (free tier available)
-- ⚠️ Playwright requires browser installation (~150MB)
-- ⚠️ Twitter structure changes may require updates
+- ⚠️ Playwright requires browser installation (~150 MB)
+- ⚠️ Twitter/X layout or anti-bot changes may require quick updates
 - ⚠️ PHIVOLCS scraping depends on website structure
+- ⚠️ Public social sources can throttle or rate-limit anonymous access
 
 ## 🔒 Legal & Ethical Considerations
 
@@ -400,11 +460,11 @@ MIT License - feel free to use this project for personal or commercial purposes.
 
 **1. "Traffic data temporarily unavailable"**
 ```bash
-# Check TomTom API key is configured
-cat .env | grep TOMTOM_API_KEY
+# Confirm Playwright Chromium is installed
+npx playwright install chromium
 
-# If missing, add to .env:
-TOMTOM_API_KEY=your_api_key_here
+# Check outbound access to Twitter/X from the host
+curl -I https://x.com/mmda
 ```
 
 **2. "Playwright browser not found"**
@@ -503,7 +563,6 @@ For detailed deployment instructions, see [API_DOCUMENTATION.md](docs/API_DOCUME
 
 ## 🙏 Credits & Attribution
 
-- **TomTom**: Traffic data © TomTom International B.V.
 - **Playwright**: MIT License (Microsoft)
 - **PAGASA**: Philippine Atmospheric, Geophysical and Astronomical Services Administration
 - **PHIVOLCS**: Philippine Institute of Volcanology and Seismology
@@ -531,14 +590,14 @@ curl http://localhost:3000/api/phivolcs/earthquakes
 
 ---
 
-**Note**: This project uses TomTom Traffic API for MMDA traffic data and scrapes public sources for PAGASA/PHIVOLCS data. For official information, visit:
+**Note**: This project scrapes MMDA and PAGASA advisories from their official Twitter/X feeds and gathers PHIVOLCS data from public web pages. For official information, visit:
 - MMDA: https://mmda.gov.ph
 - PAGASA: https://www.pagasa.dost.gov.ph
 - PHIVOLCS: https://www.phivolcs.dost.gov.ph
 
 **Built with ❤️ for the Philippines**
 
-**Version:** 2.0.0 (Playwright + TomTom Integration)  
+**Version:** 2.1.0 (Playwright Twitter Integration)  
 **Last Updated:** October 2, 2025
 
 

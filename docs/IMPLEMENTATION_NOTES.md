@@ -1,4 +1,4 @@
-# Implementation Notes - Playwright & TomTom Traffic API
+# Implementation Notes - Playwright Social Scrapers
 
 ## Recent Changes (October 2, 2025)
 
@@ -31,42 +31,43 @@ await page.goto('https://x.com/dost_pagasa');
 
 ---
 
-### 2. TomTom Traffic API for MMDA Traffic Data ✅
+### 2. MMDA Twitter/X Scraper for Traffic Alerts ✅
 
 **What Changed:**
-- Replaced Twitter scraping with real-time traffic data from TomTom
-- Now provides actual traffic incidents, delays, and road conditions
+- Leaned fully into Playwright scraping of the official MMDA Twitter/X feed
+- Filters for tweets starting with `MMDA ALERT` to capture actionable advisories
+- Normalizes tweet metadata so API consumers receive consistent fields
 
 **Implementation:**
 ```typescript
 // src/mmda/mmda.service.ts
-private readonly tomtomApiKey: string;
-private readonly tomtomBaseUrl = 'https://api.tomtom.com/traffic/services/4';
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage();
+await page.goto(this.mmdaTwitterUrl, { waitUntil: 'networkidle' });
 
-// Fetches traffic incidents for 12 major Metro Manila highways
-await this.getTrafficIncidents(lat, lon, highwayName);
+const alerts = await page.evaluate(() => {
+  return [...document.querySelectorAll('article[data-testid="tweet"]')]
+    .slice(0, 30)
+    .map(...)
+});
 ```
 
-**Covered Highways:**
-- EDSA
-- C5 Road  
-- Commonwealth Avenue
-- Quezon Avenue
-- España Boulevard
-- Marcos Highway
-- Ortigas Avenue
-- Shaw Boulevard
-- Roxas Boulevard
-- SLEX (South Luzon Expressway)
-- NLEX (North Luzon Expressway)
-- Skyway
+**Captured Fields:**
+- `text` — raw tweet content (normalized whitespace)
+- `timestamp` — tweet timestamp via `<time>` element
+- `url` — canonical link to the tweet
+- `source` — fixed to `MMDA Twitter (@MMDA)`
+- `type` — currently `mmda_alert` for filtering downstream
 
 **Benefits:**
-- Real-time traffic incident data
-- Accurate delay information
-- Severity levels (critical, major, moderate, minor, low)
-- Incident types (traffic jam, accident, road work, etc.)
-- Free tier: 2,500 requests/day
+- Directly mirrors official MMDA public advisories
+- Zero third-party API dependencies or keys
+- Works even when traffic APIs are unavailable
+
+**Trade-offs:**
+- Twitter/X layout or anti-bot changes may require selector updates
+- Alerts are limited to information included in tweet text
+- Requires Playwright Chromium runtime on the host
 
 ---
 
@@ -80,16 +81,10 @@ await this.getTrafficIncidents(lat, lon, highwayName);
    npx playwright install chromium
    ```
 
-2. **Get TomTom API Key:**
-   - Visit: https://developer.tomtom.com/
-   - Sign up for free account
-   - Create an API key (Traffic API)
-   - Free tier: 2,500 requests/day
-
-3. **Configure Environment:**
+2. **Configure Environment (optional):**
    ```bash
-   cp .env.example .env
-   # Edit .env and add your TOMTOM_API_KEY
+   cp env.example .env
+   # Edit .env to override defaults like PORT or MMDA_TWITTER_URL
    ```
 
 ### Running the Application
@@ -107,50 +102,44 @@ npm run start:prod
 
 ## API Endpoints
 
-### MMDA Traffic (TomTom-powered)
+### MMDA Traffic Alerts (Twitter/X)
 
 **GET /api/mmda/traffic**
-Returns traffic incidents for all major Metro Manila highways
+Returns the latest `MMDA ALERT` tweets with normalized metadata. Primary scraping uses the Twitter/X proxy defined by `TWITTER_PROXY_BASE` (default: https://r.jina.ai/https://x.com) to avoid headless browser blocks.
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    "count": 5,
+    "count": 3,
     "alerts": [
       {
-        "text": "EDSA: Traffic congestion - Quezon Avenue to Shaw Boulevard",
-        "location": "EDSA",
-        "description": "Traffic congestion",
-        "from": "Quezon Avenue",
-        "to": "Shaw Boulevard",
-        "severity": "major",
-        "delay": 300,
-        "length": 2500,
-        "type": "TRAFFIC_JAM",
+        "text": "MMDA ALERT: Heavy traffic along EDSA SB from Cubao to Ortigas.",
         "timestamp": "2025-10-02T12:00:00.000Z",
-        "source": "TomTom Traffic API"
+        "url": "https://x.com/mmda/status/1234567890",
+        "type": "mmda_alert",
+        "source": "MMDA Twitter (@MMDA)"
       }
     ],
-    "source": "TomTom Traffic API (Metro Manila)",
-    "lastUpdated": "2025-10-02T12:00:00.000Z"
+    "source": "MMDA Twitter Official Feed (@MMDA)",
+    "lastUpdated": "2025-10-02T12:05:11.000Z"
   }
 }
 ```
 
 **GET /api/mmda/highways**
-Lists all monitored highways with coordinates
+Lists monitored highways and coordinates (used for keyword filtering).
 
 **GET /api/mmda/traffic/:highwayId**
-Filter traffic by specific highway (e.g., `/api/mmda/traffic/EDSA`)
+Filters alerts by keyword match on the highway name (e.g., `/api/mmda/traffic/EDSA`).
 
 ---
 
-### PAGASA Weather (Playwright-powered)
+### PAGASA Weather (Playwright + Proxy)
 
 **GET /api/pagasa/forecast**
-Returns recent tweets from @dost_pagasa
+Returns recent tweets from @dost_pagasa. Attempts Playwright scraping first, then falls back to the configurable proxy feed when headless access is blocked.
 
 **Response:**
 ```json
@@ -197,7 +186,7 @@ Returns active volcano monitoring data
 
 | Endpoint | Cache Duration | Notes |
 |----------|---------------|-------|
-| MMDA Traffic | 5 minutes | Balance between freshness and API limits |
+| MMDA Traffic | 10 minutes | Reduces Twitter scraping frequency |
 | MMDA Highways | 10 minutes | Static data, rarely changes |
 | PAGASA Forecast | 30 minutes | Weather updates not too frequent |
 | PAGASA Severe Weather | 10 minutes | More frequent checks for emergencies |
@@ -208,14 +197,12 @@ Returns active volcano monitoring data
 ## Troubleshooting
 
 ### Issue: "Traffic data temporarily unavailable"
-**Cause:** Missing or invalid TomTom API key
+**Cause:** Twitter/X page structure changed or Playwright prerequisites missing
 **Solution:** 
 ```bash
-# Check .env file
-cat .env | grep TOMTOM_API_KEY
-
-# Should see:
-TOMTOM_API_KEY=your_actual_api_key_here
+npx playwright install chromium
+curl -I https://x.com/mmda
+# If blocked, consider rotating IP or enabling headless login cookies.
 ```
 
 ### Issue: PAGASA returns no tweets
@@ -239,16 +226,15 @@ npx playwright install chromium
 
 ## Cost Analysis
 
-### TomTom Traffic API (Free Tier)
-- **Limit:** 2,500 requests/day
-- **With 5-min cache:** ~12 requests/hour = 288 requests/day
-- **Headroom:** Can handle ~8.7x more traffic
-- **Cost if exceeded:** $0.50 per 1,000 extra requests
+### Twitter/X Scraping
+- **Limit:** Subject to public rate limiting; keep requests < 6/hour per feed via caching
+- **Mitigation:** Cache responses for 10 minutes; add randomized delays if scaling horizontally
+- **Risk:** Unexpected HTML changes may require quick patches
 
 ### Playwright
 - **Cost:** Free and open-source
-- **Resource Usage:** ~150MB RAM per browser instance
-- **Recommendation:** Use caching aggressively (30-min cache)
+- **Resource Usage:** ~150 MB RAM per browser instance
+- **Recommendation:** Use caching aggressively (30-minute cache for weather, 10 minutes for MMDA)
 
 ---
 
@@ -256,12 +242,12 @@ npx playwright install chromium
 
 ### Short Term
 1. Add retry logic for failed API calls
-2. Implement request queuing for TomTom API
-3. Add monitoring/alerting for API rate limits
+2. Add selector change detection + alerting for Twitter layout updates
+3. Add monitoring/alerting for scraping rate limits
 4. Better error messages in responses
 
 ### Medium Term
-1. Support for more traffic APIs (HERE, Google Maps)
+1. Support for additional social sources (e.g., Facebook posts) as fallbacks
 2. Traffic predictions using historical data
 3. WebSocket for real-time traffic updates
 4. Mobile app endpoints
@@ -274,16 +260,16 @@ npx playwright install chromium
 
 ---
 
-## Alternative APIs (if TomTom doesn't work)
+## Alternative Data Sources (if Twitter/X fails)
 
 ### For Traffic Data:
 1. **HERE Traffic API** - https://developer.here.com/
-   - Free tier: 250,000 transactions/month
-   - More generous than TomTom
+   - Paid plans offer structured incident feeds
+   - Consider for enterprise deployments
 
 2. **Google Maps Traffic** - https://developers.google.com/maps/documentation/roads/traffic
    - Requires API key + billing
-   - $5-7 per 1,000 requests
+   - Provides speed and congestion insights
 
 3. **OpenTrafficCam** - Open-source alternative
    - Self-hosted, no API limits
@@ -302,8 +288,8 @@ npx playwright install chromium
 
 ## License & Attribution
 
-- **TomTom:** Traffic data © TomTom International B.V.
-- **Playwright:** MIT License
+- **Playwright:** MIT License (Microsoft)
+- **Twitter/X:** Public content per platform terms
 - **PAGASA:** Public weather information from Philippines DOST
 - **PHIVOLCS:** Public seismic data from Philippines DOST
 
@@ -315,9 +301,9 @@ For issues or questions:
 1. Check this document first
 2. Review logs: `npm run start:dev`
 3. Test endpoints with curl or Postman
-4. Check API key validity
+4. Inspect scraper logs for selector or navigation errors
 
 ---
 
-**Last Updated:** October 2, 2025
-**Version:** 2.0.0 (Playwright + TomTom Integration)
+**Last Updated:** November 1, 2025
+**Version:** 2.1.0 (Playwright Twitter Integration)

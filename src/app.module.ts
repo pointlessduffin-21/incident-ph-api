@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { MmdaModule } from './mmda/mmda.module';
 import { PagasaModule } from './pagasa/pagasa.module';
 import { PhivolcsModule } from './phivolcs/phivolcs.module';
+import { TyphoonModule } from './typhoon/typhoon.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PhivolcsModule } from './phivolcs/phivolcs.module';
     PagasaModule,
     PhivolcsModule,
     AcledModule,
+    TyphoonModule,
   ],
   controllers: [AppController],
 })

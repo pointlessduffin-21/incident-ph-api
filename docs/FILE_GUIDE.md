@@ -23,7 +23,7 @@ sms-apis/
 │   ├── nest-cli.json          NestJS CLI configuration
 │   ├── .prettierrc            Code formatting rules
 │   ├── .gitignore             Git ignore patterns
-│   └── .env                   Environment variables (create from .env.example)
+│   └── .env                   Environment variables (create from env.example)
 │
 └── 💻 Source Code (src/)
     ├── main.ts                Application entry point

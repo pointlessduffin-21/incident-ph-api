@@ -5,12 +5,17 @@ import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
 import * as cheerio from 'cheerio';
 import { chromium } from 'playwright';
+import { firstValueFrom } from 'rxjs';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class PagasaService {
   private readonly logger = new Logger(PagasaService.name);
   private readonly baseUrl: string;
   private readonly twitterUrl: string;
+  private readonly twitterProxyBase: string;
+  private readonly pagasaHandle: string;
 
   constructor(
     private readonly httpService: HttpService,
@@ -19,7 +24,9 @@ export class PagasaService {
   ) {
     this.baseUrl = this.configService.get('PAGASA_BASE_URL') || 
                    'https://www.pagasa.dost.gov.ph';
-    this.twitterUrl = 'https://x.com/dost_pagasa';
+    this.twitterUrl = this.configService.get('PAGASA_TWITTER_URL') || 'https://x.com/dost_pagasa';
+    this.twitterProxyBase = this.configService.get('TWITTER_PROXY_BASE') || 'https://r.jina.ai/https://x.com';
+    this.pagasaHandle = this.extractHandle(this.twitterUrl) || 'dost_pagasa';
   }
 
   async getWeatherForecast() {
@@ -32,101 +39,41 @@ export class PagasaService {
         return cached;
       }
 
-      this.logger.log('Scraping PAGASA Twitter with Playwright...');
+      this.logger.log('Fetching PAGASA updates...');
 
-      // Launch browser with Playwright
-      const browser = await chromium.launch({ 
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-      
-      const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        viewport: { width: 1920, height: 1080 }
-      });
-      
-      const page = await context.newPage();
-      
+      let tweets: any[] = [];
+
       try {
-        // Navigate to PAGASA Twitter
-        await page.goto(this.twitterUrl, { 
-          waitUntil: 'networkidle',
-          timeout: 30000 
-        });
-        
-        // Wait for tweets to load
-        await page.waitForSelector('article[data-testid="tweet"]', { timeout: 10000 });
-        
-        // Extract tweets
-        const tweets = await page.evaluate(() => {
-          const tweetElements = document.querySelectorAll('article[data-testid="tweet"]');
-          const extractedTweets = [];
-          
-          tweetElements.forEach((article, index) => {
-            if (index >= 20) return; // Limit to 20 tweets
-            
-            // Extract tweet text
-            const tweetTextElement = article.querySelector('[data-testid="tweetText"]');
-            const text = tweetTextElement ? tweetTextElement.textContent : '';
-            
-            // Extract timestamp
-            const timeElement = article.querySelector('time');
-            const timestamp = timeElement ? timeElement.getAttribute('datetime') : new Date().toISOString();
-            
-            if (text && text.length > 20) {
-              // Categorize tweet type
-              let type = 'general';
-              const lowerText = text.toLowerCase();
-              
-              if (lowerText.includes('warning') || lowerText.includes('advisory')) {
-                type = 'warning';
-              } else if (lowerText.includes('forecast')) {
-                type = 'forecast';
-              } else if (lowerText.includes('tropical') || 
-                         lowerText.includes('cyclone') || 
-                         lowerText.includes('typhoon')) {
-                type = 'tropical_cyclone';
-              }
-              
-              extractedTweets.push({
-                text: text.trim(),
-                timestamp: timestamp,
-                type: type,
-                source: 'PAGASA Twitter',
-              });
-            }
-          });
-          
-          return extractedTweets;
-        });
-        
-        await browser.close();
-        
-        // If no tweets found, provide fallback
-        if (tweets.length === 0) {
-          tweets.push({
-            text: 'No current PAGASA updates found. Please check https://x.com/dost_pagasa for latest weather information.',
-            timestamp: new Date().toISOString(),
-            type: 'info',
-            source: 'System',
-          });
-        }
-        
-        const forecast = {
-          count: tweets.length,
-          updates: tweets,
-          source: 'PAGASA Twitter (@dost_pagasa)',
-          lastUpdated: new Date().toISOString(),
-        };
-
-        await this.cacheManager.set(cacheKey, forecast, 1800000); // 30 minutes
-        
-        return forecast;
-        
-      } catch (pageError) {
-        await browser.close();
-        throw pageError;
+        tweets = await this.fetchTweetsViaPlaywright();
+      } catch (playwrightError) {
+        const message = playwrightError instanceof Error ? playwrightError.message : String(playwrightError);
+        this.logger.warn(`Playwright scraping failed (${message}). Falling back to proxy feed...`);
+        tweets = await this.fetchTweetsViaProxy();
       }
+
+      if (tweets.length === 0) {
+        this.logger.warn('No PAGASA tweets retrieved from any source; returning placeholder data');
+        tweets.push({
+          text: 'No current PAGASA updates found. Please check https://x.com/dost_pagasa for latest weather information.',
+          timestamp: new Date().toISOString(),
+          type: 'info',
+          source: 'System',
+        });
+      }
+
+      const forecast = {
+        count: tweets.length,
+        updates: tweets,
+        source: 'PAGASA Twitter (@dost_pagasa)',
+        lastUpdated: new Date().toISOString(),
+      };
+
+      await this.cacheManager.set(cacheKey, forecast, 1800000); // 30 minutes
+      
+      // Persist normalized updates for durability/analytics
+      await this.persistUpdates(tweets);
+
+      return forecast;
       
     } catch (error) {
       this.logger.error('Error fetching PAGASA forecast:', error.message);
@@ -136,7 +83,7 @@ export class PagasaService {
         count: 0,
         updates: [],
         source: 'PAGASA (Data temporarily unavailable)',
-        note: 'For real-time updates, visit https://x.com/dost_pagasa or https://www.pagasa.dost.gov.ph',
+        note: 'For real-time updates, visit https://x.com/dost_pagasa or configure TWITTER_PROXY_BASE for scraping.',
         error: 'Unable to fetch data. Please check official sources.',
         lastUpdated: new Date().toISOString(),
       };
@@ -245,6 +192,193 @@ export class PagasaService {
         error: 'Unable to fetch data. Please check PAGASA official sources.',
         lastUpdated: new Date().toISOString(),
       };
+    }
+  }
+
+  private async fetchTweetsViaPlaywright(): Promise<any[]> {
+    const browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    const context = await browser.newContext({
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      viewport: { width: 1920, height: 1080 },
+    });
+
+    const page = await context.newPage();
+
+    try {
+      await page.goto(this.twitterUrl, {
+        waitUntil: 'networkidle',
+        timeout: 30000,
+      });
+
+      await page.waitForSelector('article[data-testid="tweet"]', { timeout: 10000 });
+
+      return await page.evaluate(() => {
+        const tweetElements = document.querySelectorAll('article[data-testid="tweet"]');
+        const extractedTweets = [];
+
+        tweetElements.forEach((article, index) => {
+          if (index >= 20) return;
+
+          const tweetTextElement = article.querySelector('[data-testid="tweetText"]');
+          const text = tweetTextElement ? tweetTextElement.textContent : '';
+
+          const timeElement = article.querySelector('time');
+          const timestamp = timeElement ? timeElement.getAttribute('datetime') : new Date().toISOString();
+
+          if (text && text.length > 20) {
+            let type = 'general';
+            const lowerText = text.toLowerCase();
+
+            if (lowerText.includes('warning') || lowerText.includes('advisory')) {
+              type = 'warning';
+            } else if (lowerText.includes('forecast')) {
+              type = 'forecast';
+            } else if (lowerText.includes('tropical') || lowerText.includes('cyclone') || lowerText.includes('typhoon')) {
+              type = 'tropical_cyclone';
+            }
+
+            const statusAnchor = article.querySelector<HTMLAnchorElement>('a[href*="/status/"]');
+            const url = statusAnchor ? statusAnchor.href : undefined;
+
+            extractedTweets.push({
+              text: text.trim(),
+              timestamp: timestamp,
+              type: type,
+              source: 'PAGASA Twitter',
+              url,
+            });
+          }
+        });
+
+        return extractedTweets;
+      });
+    } finally {
+      await browser.close();
+    }
+  }
+
+  private async fetchTweetsViaProxy(): Promise<any[]> {
+    try {
+      const url = this.buildProxyUrl(this.pagasaHandle);
+      const response = await firstValueFrom(
+        this.httpService.get(url, {
+          timeout: 15000,
+          headers: {
+            'user-agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
+        }),
+      );
+
+      const payload = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+      const lines = payload
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .filter(line => !line.startsWith('[') && !line.startsWith('!['))
+        .filter(line => line.toLowerCase() !== 'pinned')
+        .filter(line => !line.toLowerCase().includes("'s posts"))
+        .filter(line => !line.toLowerCase().includes('’s posts'))
+        .filter(line => !line.startsWith('Published Time:'))
+        .filter(line => !line.startsWith('The official Twitter account'));
+
+      return lines
+        .filter(line => line.length > 40)
+        .slice(0, 20)
+        .map(line => {
+          const normalized = this.normalizeMarkdown(line);
+          return {
+            text: normalized,
+            timestamp: new Date().toISOString(),
+            type: this.classifyTweet(normalized),
+            source: 'PAGASA Twitter (proxy)',
+            url: this.twitterUrl,
+          };
+        });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Proxy feed scraping failed: ${message}`);
+      return [];
+    }
+  }
+
+  private extractHandle(url: string): string {
+    return url
+      .replace(/^https?:\/\/(www\.)?(x|twitter)\.com\//i, '')
+      .replace(/^@/, '')
+      .split(/[/?]/)[0]
+      .trim();
+  }
+
+  private buildProxyUrl(handle: string): string {
+    const base = (this.twitterProxyBase || '').replace(/\/$/, '');
+    if (!base) {
+      return `https://r.jina.ai/https://x.com/${handle}`;
+    }
+
+    if (base.includes('{handle}')) {
+      return base.replace('{handle}', handle);
+    }
+
+    return `${base}/${handle}`;
+  }
+
+  private classifyTweet(text: string): string {
+    const lower = text.toLowerCase();
+
+    if (lower.includes('warning') || lower.includes('advisory') || lower.includes('thunderstorm advisory')) {
+      return 'warning';
+    }
+
+    if (lower.includes('tropical') || lower.includes('cyclone') || lower.includes('typhoon') || lower.includes('storm')) {
+      return 'tropical_cyclone';
+    }
+
+    if (lower.includes('forecast')) {
+      return 'forecast';
+    }
+
+    return 'general';
+  }
+
+  private normalizeMarkdown(text: string): string {
+    return text
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private async persistUpdates(updates: any[]): Promise<void> {
+    try {
+      const dir = path.resolve(process.cwd(), 'data');
+      const filePath = path.join(dir, 'pagasa-updates.json');
+      await fs.mkdir(dir, { recursive: true });
+
+      let existing: any[] = [];
+      try {
+        const raw = await fs.readFile(filePath, 'utf-8');
+        existing = JSON.parse(raw);
+      } catch (_) {
+        existing = [];
+      }
+
+      // De-duplicate by text+timestamp
+      const key = (a: any) => `${a.text}|${a.timestamp}`;
+      const map = new Map(existing.map(a => [key(a), a]));
+      updates.forEach(a => map.set(key(a), a));
+
+      const merged = Array.from(map.values())
+        .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
+
+      await fs.writeFile(filePath, JSON.stringify(merged, null, 2), 'utf-8');
+    } catch (err: any) {
+      this.logger.warn(`Failed to persist PAGASA updates: ${err?.message || err}`);
     }
   }
 

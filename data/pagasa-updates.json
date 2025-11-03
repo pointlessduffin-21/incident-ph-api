@@ -1,0 +1,30 @@
+[
+  {
+    "text": "TROPICAL CYCLONE BULLETIN NR. 6 Typhoon #TinoPH (KALMAEGI) Issued at 11:00 AM, 03 November 2025 Valid for broadcast until the next bulletin at 2:00 PM today. “TINO” INTENSIFIES INTO A TYPHOON. Link: tinyurl.com/TCB-TinoPH",
+    "timestamp": "2025-11-03T06:15:51.189Z",
+    "type": "tropical_cyclone",
+    "source": "PAGASA Twitter (proxy)",
+    "url": "https://x.com/dost_pagasa"
+  },
+  {
+    "text": "Rainfall Advisory No. 1 #NCR_PRSD Weather System: Shear Line Issued at: 2:00 PM, 03 November 2025(Monday) Light to moderate rains are expected over Laguna, Batangas, Cavite, Bulacan, Pampanga, Nueva Ecija, Tarlac, Zambales and Bataan. Light to moderate with occasional heavy",
+    "timestamp": "2025-11-03T06:15:51.189Z",
+    "type": "warning",
+    "source": "PAGASA Twitter (proxy)",
+    "url": "https://x.com/dost_pagasa"
+  },
+  {
+    "text": "Thunderstorm Advisory No. 14 #NCR_PRSD Issued at: 12:03 PM, 03 November 2025(Monday) Moderate to heavy rainshowers with lightning and strong winds are expected over Laguna, Cavite, Batangas, Metro Manila, Bulacan, Pampanga, Bataan, Zambales(San Marcelino, Subic, Olongapo,",
+    "timestamp": "2025-11-03T06:15:51.189Z",
+    "type": "warning",
+    "source": "PAGASA Twitter (proxy)",
+    "url": "https://x.com/dost_pagasa"
+  },
+  {
+    "text": "Thunderstorm Advisory No. 13 #NCR_PRSD Issued at: 9:05 AM, 03 November 2025(Monday) Moderate to heavy rainshowers with lightning and strong winds are expected over Batangas, Metro Manila(Caloocan, Malabon, Navotas, Valenzuela, Quezon City, Paranaque, Taguig, Makati, Mandaluyong,",
+    "timestamp": "2025-11-03T06:15:51.189Z",
+    "type": "warning",
+    "source": "PAGASA Twitter (proxy)",
+    "url": "https://x.com/dost_pagasa"
+  }
+]
