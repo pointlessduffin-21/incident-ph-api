@@ -1,0 +1,339 @@
+import axios from 'axios';
+
+// Pagbilao, Quezon coordinates
+export const PAGBILAO_COORDS = {
+  lat: 13.9667,
+  lon: 121.6833,
+  name: 'Pagbilao, Quezon',
+};
+
+// Philippines center coordinates for typhoon search
+export const PHILIPPINES_COORDS = {
+  lat: 12.8797,
+  lon: 121.7740,
+};
+
+export interface CurrentWeather {
+  temp: number;
+  feels_like: number;
+  humidity: number;
+  pressure: number;
+  wind_speed: number;
+  wind_deg: number;
+  clouds: number;
+  visibility: number;
+  weather: Array<{
+    id: number;
+    main: string;
+    description: string;
+    icon: string;
+  }>;
+  dt: number;
+}
+
+export interface WeatherForecast {
+  dt: number;
+  temp: {
+    day: number;
+    min: number;
+    max: number;
+    night: number;
+    eve: number;
+    morn: number;
+  };
+  feels_like: {
+    day: number;
+    night: number;
+    eve: number;
+    morn: number;
+  };
+  pressure: number;
+  humidity: number;
+  weather: Array<{
+    id: number;
+    main: string;
+    description: string;
+    icon: string;
+  }>;
+  speed: number;
+  deg: number;
+  clouds: number;
+  rain?: number;
+  pop: number; // probability of precipitation
+}
+
+export interface TyphoonAlert {
+  sender_name?: string;
+  event: string;
+  start: number;
+  end: number;
+  description: string;
+  tags?: string[];
+}
+
+export interface WeatherResponse {
+  current: CurrentWeather;
+  daily?: WeatherForecast[];
+  alerts?: TyphoonAlert[];
+  timezone?: string;
+}
+
+const weatherClient = axios.create({
+  timeout: 15000,
+});
+
+export async function getCurrentWeather(lat: number, lon: number, apiKey?: string): Promise<WeatherResponse> {
+  const key = apiKey || import.meta.env.VITE_OPENWEATHER_KEY;
+  if (!key) {
+    throw new Error('OpenWeather API key is required. Set VITE_OPENWEATHER_KEY in your .env file.');
+  }
+
+  // Fetch current weather
+  const currentResponse = await weatherClient.get(
+    'https://api.openweathermap.org/data/2.5/weather',
+    {
+      params: {
+        lat,
+        lon,
+        appid: key,
+        units: 'metric',
+      },
+    }
+  );
+
+  // Fetch 7-day forecast (5 day / 3 hour is free)
+  const forecastResponse = await weatherClient.get(
+    'https://api.openweathermap.org/data/2.5/forecast',
+    {
+      params: {
+        lat,
+        lon,
+        appid: key,
+        units: 'metric',
+      },
+    }
+  );
+
+  // Transform current weather data
+  const current: CurrentWeather = {
+    temp: currentResponse.data.main.temp,
+    feels_like: currentResponse.data.main.feels_like,
+    humidity: currentResponse.data.main.humidity,
+    pressure: currentResponse.data.main.pressure,
+    wind_speed: currentResponse.data.wind.speed,
+    wind_deg: currentResponse.data.wind.deg,
+    clouds: currentResponse.data.clouds.all,
+    visibility: currentResponse.data.visibility,
+    weather: currentResponse.data.weather,
+    dt: currentResponse.data.dt,
+  };
+
+  // Transform forecast data - aggregate daily
+  const dailyMap = new Map<string, any>();
+  forecastResponse.data.list.forEach((item: any) => {
+    const date = new Date(item.dt * 1000).toDateString();
+    if (!dailyMap.has(date)) {
+      dailyMap.set(date, {
+        dt: item.dt,
+        temps: [item.main.temp],
+        temp_min: item.main.temp_min,
+        temp_max: item.main.temp_max,
+        humidity: item.main.humidity,
+        pressure: item.main.pressure,
+        weather: item.weather,
+        clouds: item.clouds.all,
+        wind_speed: item.wind.speed,
+        wind_deg: item.wind.deg,
+        pop: item.pop || 0,
+        rain: item.rain?.['3h'] || 0,
+      });
+    } else {
+      const existing = dailyMap.get(date);
+      existing.temps.push(item.main.temp);
+      existing.temp_min = Math.min(existing.temp_min, item.main.temp_min);
+      existing.temp_max = Math.max(existing.temp_max, item.main.temp_max);
+      existing.pop = Math.max(existing.pop, item.pop || 0);
+      existing.rain += item.rain?.['3h'] || 0;
+    }
+  });
+
+  // Convert to daily forecast format
+  const daily: WeatherForecast[] = Array.from(dailyMap.values()).map((day) => ({
+    dt: day.dt,
+    temp: {
+      day: day.temps.reduce((a: number, b: number) => a + b, 0) / day.temps.length,
+      min: day.temp_min,
+      max: day.temp_max,
+      night: day.temps[day.temps.length - 1] || day.temp_min,
+      eve: day.temps[Math.floor(day.temps.length / 2)] || day.temp_max,
+      morn: day.temps[0] || day.temp_min,
+    },
+    feels_like: {
+      day: day.temps.reduce((a: number, b: number) => a + b, 0) / day.temps.length,
+      night: day.temps[day.temps.length - 1] || day.temp_min,
+      eve: day.temps[Math.floor(day.temps.length / 2)] || day.temp_max,
+      morn: day.temps[0] || day.temp_min,
+    },
+    pressure: day.pressure,
+    humidity: day.humidity,
+    weather: day.weather,
+    speed: day.wind_speed,
+    deg: day.wind_deg,
+    clouds: day.clouds,
+    rain: day.rain,
+    pop: day.pop,
+  }));
+
+  return {
+    current,
+    daily,
+    alerts: [], // Free tier doesn't include alerts
+    timezone: currentResponse.data.timezone ? `UTC+${currentResponse.data.timezone / 3600}` : undefined,
+  };
+}
+
+// Function to check if an alert is typhoon-related
+export function isTyphoonAlert(alert: TyphoonAlert): boolean {
+  const text = `${alert.event} ${alert.description}`.toLowerCase();
+  const keywords = ['typhoon', 'tropical cyclone', 'tropical storm', 'hurricane', 'tropical depression'];
+  return keywords.some(keyword => text.includes(keyword));
+}
+
+// Philippine typhoon names for 2024-2025
+export interface PhilippineTyphoon {
+  name: string;
+  internationalName?: string;
+  category: string;
+  maxWinds: string;
+  date: string;
+  affectedAreas: string[];
+  status: 'Active' | 'Dissipated' | 'Past';
+  description: string;
+}
+
+// Recent/Historical typhoons in the Philippines (2024-2025)
+export function getPhilippineTyphoons(): PhilippineTyphoon[] {
+  return [
+    {
+      name: 'Typhoon Leon (Kong-rey)',
+      internationalName: 'Kong-rey',
+      category: 'Typhoon',
+      maxWinds: '175 km/h',
+      date: 'October 29 - November 1, 2024',
+      affectedAreas: ['Batanes', 'Cagayan', 'Ilocos Norte', 'Apayao'],
+      status: 'Past',
+      description: 'Typhoon Leon brought strong winds and heavy rainfall to Northern Luzon. Signal No. 4 was raised in Batanes.'
+    },
+    {
+      name: 'Severe Tropical Storm Kristine (Trami)',
+      internationalName: 'Trami',
+      category: 'Severe Tropical Storm',
+      maxWinds: '95 km/h',
+      date: 'October 21-25, 2024',
+      affectedAreas: ['Bicol Region', 'Eastern Visayas', 'Calabarzon', 'Metro Manila'],
+      status: 'Past',
+      description: 'Severe Tropical Storm Kristine caused widespread flooding and landslides across Luzon. Heavy rainfall led to significant impacts in Bicol Region.'
+    },
+    {
+      name: 'Typhoon Julian (Krathon)',
+      internationalName: 'Krathon',
+      category: 'Typhoon',
+      maxWinds: '150 km/h',
+      date: 'September 30 - October 3, 2024',
+      affectedAreas: ['Batanes', 'Babuyan Islands'],
+      status: 'Past',
+      description: 'Typhoon Julian passed near the Batanes area bringing strong winds but made landfall in Taiwan.'
+    },
+    {
+      name: 'Super Typhoon Pepito (Man-yi)',
+      internationalName: 'Man-yi',
+      category: 'Super Typhoon',
+      maxWinds: '195 km/h',
+      date: 'November 2024',
+      affectedAreas: ['Eastern Samar', 'Northern Samar', 'Quezon', 'Aurora'],
+      status: 'Past',
+      description: 'Super Typhoon Pepito made multiple landfalls across the Philippines with destructive winds.'
+    },
+    {
+      name: 'Typhoon Nika (Toraji)',
+      internationalName: 'Toraji',
+      category: 'Typhoon',
+      maxWinds: '150 km/h',
+      date: 'November 11-13, 2024',
+export default {
+  getCurrentWeather,
+  isTyphoonAlert,
+  getGDACSTyphoons,
+  getPhilippineTyphoons,
+  PAGBILAO_COORDS,
+  PHILIPPINES_COORDS,
+};    internationalName: 'Usagi',
+      category: 'Typhoon',
+      maxWinds: '165 km/h',
+      date: 'November 13-16, 2024',
+      affectedAreas: ['Cagayan', 'Ilocos Norte', 'Batanes'],
+      status: 'Past',
+      description: 'Typhoon Ofel affected Northern Luzon with torrential rains shortly after Typhoon Nika.'
+    }
+  ];
+}
+
+// Fetch GDACS typhoon data
+export interface GDACSTyphoon {
+  eventid: string;
+  eventname: string;
+  fromdate?: string;
+  todate?: string;
+  lat?: number;
+  lon?: number;
+  alertlevel?: string;
+  alertscore?: number;
+  country?: string;
+  description?: string;
+}
+
+export async function getGDACSTyphoons(): Promise<GDACSTyphoon[]> {
+  try {
+    const { data } = await weatherClient.get(
+      'https://www.gdacs.org/gdacsapi/api/events/geteventlist/TC',
+      {
+        timeout: 8000,
+      }
+    );
+    
+    if (!data?.features) return [];
+    
+    return data.features
+      .map((feature: any) => {
+        const props = feature.properties || {};
+        const coords = feature.geometry?.coordinates;
+        return {
+          eventid: props.eventid,
+          eventname: props.eventname || props.name || 'Unknown Storm',
+          fromdate: props.fromdate,
+          todate: props.todate,
+          lat: coords?.[1] || props.lat,
+          lon: coords?.[0] || props.lon,
+          alertlevel: props.alertlevel,
+          alertscore: props.alertscore,
+          country: props.country,
+          description: props.description,
+        };
+      })
+      .filter((storm: GDACSTyphoon) => {
+        if (!storm.lat || !storm.lon) return false;
+        return storm.lat >= 0 && storm.lat <= 30 && storm.lon >= 100 && storm.lon <= 180;
+      });
+  } catch (error) {
+    console.error('Failed to fetch GDACS typhoons:', error);
+    return [];
+  }
+}
+
+export default {
+  getCurrentWeather,
+  isTyphoonAlert,
+  getGDACSTyphoons,
+  PAGBILAO_COORDS,
+  PHILIPPINES_COORDS,
+};

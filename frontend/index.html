@@ -1,39 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Philippines Alert Dashboard</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <header>
-    <h1>Philippines Alert Dashboard</h1>
-    <p class="subtitle">Live snapshots from MMDA, PAGASA, and PHIVOLCS services</p>
-  </header>
-
-  <main>
-    <section class="card" id="mmda-card">
-      <h2>MMDA Traffic Alert</h2>
-      <div class="content" data-loading>Loading latest alert...</div>
-    </section>
-
-    <section class="card" id="pagasa-card">
-      <h2>PAGASA Weather Update</h2>
-      <div class="content" data-loading>Loading forecast snapshot...</div>
-    </section>
-
-    <section class="card" id="phivolcs-card">
-      <h2>PHIVOLCS Seismic Update</h2>
-      <div class="content" data-loading>Loading seismic update...</div>
-    </section>
-  </main>
-
-  <footer>
-    <p>Powered by <code>sms-apis</code>. Refresh the page to fetch the latest data.</p>
-  </footer>
-
-  <script src="main.js" type="module"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Incident PH Dashboard</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>

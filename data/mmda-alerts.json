@@ -1,5 +1,101 @@
 [
   {
+    "text": "MMDA ALERT: Road crash incident at Regalado Highway K & M Paint Center SB involving MC and closed van as of 1:42 PM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-06T05:42:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Stalled dump truck due to mechanical trouble at C5 Greenmeadows SB as of 12:18 PM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-06T04:18:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at Sales PNR WB involving SUV and motorcycle as of 12:09 PM. One lane occupied. MMDA enforcers are on site managing traffic.#mmda",
+    "timestamp": "2025-11-06T04:09:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at C5 Kalayaan SB involving car and motorcycle as of 11:09 AM. One lane occupied. MMDA enforcers are on site managing traffic.#mmda",
+    "timestamp": "2025-11-06T03:09:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Stalled PUJ due to mechanical trouble at Mindanao Road 3 NB as of 10:23 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-06T02:23:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Around 50 rallyists are currently gathered at Mendiola as of 10:07 AM. MMDA traffic enforcers and PNP personnel are on site. #mmda",
+    "timestamp": "2025-11-06T02:07:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Stalled dump truck due to mechanical problem at C5 J. Vargas NB as of 9:12 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-06T01:12:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at Quezon Ave BIR road NB involving 2 motorcycles as of 9:11 AM. One lane occupied. MMDA enforcers are on site managing traffic.#mmda",
+    "timestamp": "2025-11-06T01:11:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at C5 before Kalayaan SB involving motorcycle and pickup as of 8:33 AM. One lane occupied. MMDA enforcers are on site managing traffic.#mmda",
+    "timestamp": "2025-11-06T00:33:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at Mc Arthur Del Monte EB involving PUJ and motorcycle as of 8:27 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-06T00:27:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at EDSA P. Tuazon tunnel SB involving MC and SUV as of 8:20 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-06T00:20:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at Quezon Ave. Bantayog EB involving MC and taxi as of 8:05 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-06T00:05:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-06T07:00:05.453Z"
+  },
+  {
     "text": "MMDA ALERT: Road crash incident at Mindanao St. Charbel SB involving a car and modern jeepney as of 1143. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
     "timestamp": "2025-11-03T06:15:15.457Z",
     "url": "https://x.com/mmda",
