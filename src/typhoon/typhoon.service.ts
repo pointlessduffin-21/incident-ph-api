@@ -168,23 +168,28 @@ export class TyphoonService {
       for (const item of items) {
         const description = item.description || '';
         
-        // Extract typhoon warnings using regex
-        const typhoonPattern = /(Super Typhoon|Typhoon|Tropical Storm|Tropical Depression)\s+(\d+\w+)\s*\(([^)]+)\)\s*Warning\s*#(\d+)/gi;
-        const matches = description.matchAll(typhoonPattern);
+        // Split description by <p> tags to separate each typhoon's data
+        const typhoonSections = description.split(/<\/?p>/gi).filter(s => s.trim().length > 0);
+        
+        for (const section of typhoonSections) {
+          // Extract typhoon warning info
+          const typhoonPattern = /(Super Typhoon|Typhoon|Tropical Storm|Tropical Depression)\s+(\d+\w+)\s*\(([^)]+)\)\s*Warning\s*#(\d+\w*)/i;
+          const match = section.match(typhoonPattern);
+          
+          if (!match) continue;
 
-        for (const match of matches) {
           const category = match[1];
           const designation = match[2];
           const name = match[3];
           const warningNum = match[4];
 
-          // Extract URLs from HTML
-          const trackImageUrl = this.extractUrl(description, /href="([^"]+\.gif)"/);
-          const satelliteImageUrl = this.extractUrl(description, /href="([^"]+sair\.jpg)"/);
-          const advisoryUrl = this.extractUrl(description, /href="([^"]+web\.txt)"/);
+          // Extract URLs from THIS typhoon's section only
+          const trackImageUrl = this.extractUrl(section, /href="([^"]+\.gif)"/);
+          const satelliteImageUrl = this.extractUrl(section, /href="([^"]+sair\.jpg)"/);
+          const advisoryUrl = this.extractUrl(section, /href="([^"]+web\.txt)"/);
 
           // Extract date if available
-          const dateMatch = description.match(/(\d{2}\/\d{4}Z)/);
+          const dateMatch = section.match(/(\d{2}\/\d{4}Z)/);
           const date = dateMatch ? dateMatch[1] : null;
 
           typhoons.push({
