@@ -11,8 +11,9 @@ A comprehensive NestJS-based REST API providing real-time access to Philippine g
 - **PAGASA Weather Forecasts**: Live updates from PAGASA Twitter using Playwright browser automation
 - **PHIVOLCS Data**: Earthquake and volcanic activity monitoring via web scraping
 - **Typhoon Tracking**: Real-time tropical cyclone data from JTWC and GDACS
+- **Tide Forecasts**: Coastal tide predictions for Philippine locations (high/low tides with times and heights)
 - **Interactive Swagger UI**: Test all endpoints directly from your browser
-- Built-in intelligent caching (5-30 min TTL)
+- Built-in intelligent caching (5-30 min TTL for most, 6 hours for tides)
 - Robust error handling and rate limiting
 - RESTful API design
 - Full TypeScript support
@@ -293,6 +294,70 @@ GET /api/typhoon/gdacs
 **Data Sources:**
 - **JTWC (Joint Typhoon Warning Center)**: US Navy/NOAA RSS feed with track forecasts and satellite imagery
 - **GDACS (Global Disaster Alert and Coordination System)**: UN/EC GeoJSON feed with global tropical cyclone data
+
+---
+
+### Tide Forecast Endpoints
+
+#### Get Tide Forecast for a Location
+```http
+GET /api/tide/forecast/:location
+```
+
+**Example:**
+```http
+GET /api/tide/forecast/cordova-1
+```
+
+**Response:**
+```json
+{
+  "location": "Cordova",
+  "timezone": "PST (UTC +8.0hrs)",
+  "tides": [
+    {
+      "date": "Thursday 13 November 2025",
+      "events": [
+        {
+          "type": "High Tide",
+          "time": "2:38 AM",
+          "heightMeters": 1.66,
+          "heightFeet": 5.45
+        },
+        {
+          "type": "Low Tide",
+          "time": "11:51 AM",
+          "heightMeters": 0.53,
+          "heightFeet": 1.74
+        }
+      ]
+    }
+  ],
+  "cachedAt": "2025-11-12T10:00:00.000Z"
+}
+```
+
+#### Get Available Locations
+```http
+GET /api/tide/locations
+```
+
+**Response:**
+```json
+{
+  "locations": [
+    { "slug": "cordova-1", "name": "Cordova" },
+    { "slug": "manila-bay", "name": "Manila Bay" },
+    { "slug": "cebu-city", "name": "Cebu City" },
+    { "slug": "davao-gulf", "name": "Davao Gulf" },
+    { "slug": "subic-bay", "name": "Subic Bay" },
+    { "slug": "puerto-princesa", "name": "Puerto Princesa" }
+  ]
+}
+```
+
+**Data Source:**
+- **Tide-Forecast.com**: Comprehensive tide predictions for Philippine coastal locations
 
 ---
 

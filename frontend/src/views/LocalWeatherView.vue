@@ -317,6 +317,27 @@
               </div>
             </div>
           </div>
+
+          <!-- Quick Link to Tide Forecast -->
+          <div class="mt-6">
+            <RouterLink 
+              to="/tides"
+              class="block bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg shadow-lg p-6 hover:from-blue-600 hover:to-cyan-600 transition-all hover:shadow-xl"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                  <div class="text-4xl">🌊</div>
+                  <div>
+                    <h3 class="text-xl font-bold mb-1">Tide Forecast</h3>
+                    <p class="text-blue-100 text-sm">View complete tide schedules for coastal areas</p>
+                  </div>
+                </div>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </RouterLink>
+          </div>
         </div>
       </div>
 
@@ -329,9 +350,9 @@
           <div class="text-sm text-blue-800">
             <p class="font-semibold mb-1">About this page</p>
             <p>
-              This page provides real-time weather data for Pagbilao, Quezon and historical typhoon information for the Philippines.
-              Data is sourced from OpenWeather API, GDACS (Global Disaster Alert and Coordination System), and PAGASA official records. 
-              Weather data updates automatically based on your refresh settings.
+              This page provides real-time weather data for Pagbilao, Quezon and typhoon information for the Philippines.
+              Data is sourced from OpenWeather API, JTWC (US Navy), GDACS, PAGASA, and tide-forecast.com. 
+              Weather and tide data update automatically based on your refresh settings.
             </p>
           </div>
         </div>

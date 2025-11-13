@@ -7,6 +7,10 @@ import AcledView from '../views/AcledView.vue';
 import SettingsView from '../views/SettingsView.vue';
 import WindyView from '../views/WindyView.vue';
 import LocalWeatherView from '../views/LocalWeatherView.vue';
+import TidesDashboard from '../views/TidesDashboard.vue';
+import TidesCordova from '../views/TidesCordova.vue';
+import TidesLucena from '../views/TidesLucena.vue';
+import TidesSettings from '../views/TidesSettings.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -50,6 +54,31 @@ const router = createRouter({
       path: '/local-weather',
       name: 'LocalWeather',
       component: LocalWeatherView,
+    },
+    {
+      path: '/tides',
+      children: [
+        {
+          path: '',
+          name: 'TidesDashboard',
+          component: TidesDashboard,
+        },
+        {
+          path: 'cordova',
+          name: 'TidesCordova',
+          component: TidesCordova,
+        },
+        {
+          path: 'lucena',
+          name: 'TidesLucena',
+          component: TidesLucena,
+        },
+        {
+          path: 'settings',
+          name: 'TidesSettings',
+          component: TidesSettings,
+        },
+      ],
     },
   ],
 });

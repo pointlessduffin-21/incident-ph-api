@@ -9,6 +9,8 @@ import weatherService, {
   type PhilippineTyphoon
 } from '../services/weather';
 import apiService from '../services/api';
+import * as tideService from '../services/tides';
+import type { TideForecast } from '../services/tides';
 
 export const useLocalWeatherStore = defineStore('localWeather', () => {
   const loading = ref(false);
@@ -32,6 +34,11 @@ export const useLocalWeatherStore = defineStore('localWeather', () => {
   
   // Philippine typhoon history
   const philippineTyphoons = ref<PhilippineTyphoon[]>([]);
+  
+  // Tide forecast data
+  const tideForecast = ref<TideForecast | null>(null);
+  const loadingTides = ref(false);
+  const tidesError = ref<string | null>(null);
   
   const lastUpdated = ref<string | null>(null);
 
@@ -108,6 +115,21 @@ export const useLocalWeatherStore = defineStore('localWeather', () => {
     }
   }
 
+  async function fetchTideForecast() {
+    loadingTides.value = true;
+    tidesError.value = null;
+    
+    try {
+      const tides = await tideService.getCordovaTideForecast();
+      tideForecast.value = tides;
+    } catch (err: any) {
+      tidesError.value = err.message || 'Failed to fetch tide forecast';
+      tideForecast.value = null;
+    } finally {
+      loadingTides.value = false;
+    }
+  }
+
   async function fetchAllData() {
     // Fetch all data in parallel
     await Promise.all([
@@ -143,6 +165,9 @@ export const useLocalWeatherStore = defineStore('localWeather', () => {
     loadingGdacs,
     gdacsError,
     philippineTyphoons,
+    tideForecast,
+    loadingTides,
+    tidesError,
     lastUpdated,
     
     // Actions
@@ -150,6 +175,7 @@ export const useLocalWeatherStore = defineStore('localWeather', () => {
     fetchPagasaTyphoons,
     fetchGDACSTyphoons,
     fetchPhilippineTyphoons,
+    fetchTideForecast,
     fetchAllData,
     
     // Helpers

@@ -16,7 +16,7 @@ export class AppController {
   getInfo() {
     return {
       name: 'Philippine Government Services API',
-      version: '1.1.0',
+      version: '1.2.0',
       documentation: '/api/docs',
       services: {
         mmda: {
@@ -57,6 +57,13 @@ export class AppController {
             'GET /api/typhoon/active',
             'GET /api/typhoon/jtwc',
             'GET /api/typhoon/gdacs',
+          ],
+        },
+        tide: {
+          description: 'Tide Forecasts for Philippine Coastal Locations',
+          endpoints: [
+            'GET /api/tide/forecast/:location',
+            'GET /api/tide/locations',
           ],
         },
       },

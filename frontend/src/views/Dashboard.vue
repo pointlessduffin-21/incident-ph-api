@@ -112,6 +112,12 @@ onUnmounted(() => {
             Local Weather
           </RouterLink>
           <RouterLink
+            to="/tides"
+            class="border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700 py-4 px-1 text-sm font-medium text-gray-500"
+          >
+            Tides
+          </RouterLink>
+          <RouterLink
             to="/settings"
             class="border-b-2 border-transparent hover:border-gray-300 hover:text-gray-700 py-4 px-1 text-sm font-medium text-gray-500"
           >
