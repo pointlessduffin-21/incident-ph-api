@@ -43,8 +43,8 @@ const TIDE_LOCATIONS = {
  */
 async function scrapeTideForecast(url: string, locationName: string, lat: number, lon: number): Promise<TideForecast | null> {
   try {
-    // Use CORS proxy to fetch the page
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    // Use CORS proxy to fetch the page - corsproxy.io is more reliable
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
     const response = await fetch(proxyUrl);
     
     if (!response.ok) {
@@ -75,8 +75,8 @@ async function scrapeTideForecast(url: string, locationName: string, lat: number
     
     console.log(`Found ${allRows.length} table rows, parsing tide data...`);
     
-    const now = new Date();
-    const todayDay = now.getDate();
+    // Collect ALL tide data first, regardless of date
+    const allTides: (TideData & { dayNumber: number })[] = [];
     
     // Parse tide data from table rows
     allRows.forEach((row) => {
@@ -113,42 +113,87 @@ async function scrapeTideForecast(url: string, locationName: string, lat: number
       const heightMatch = heightText.match(/([\d.]+)\s*m/i);
       const heightMeters = heightMatch && heightMatch[1] ? parseFloat(heightMatch[1]) : 0;
       
-      const tideData: TideData = {
+      // Extract day number for categorization
+      const dayMatch = dateStr.match(/(\d+)/);
+      const dayNumber = dayMatch && dayMatch[1] ? parseInt(dayMatch[1]) : 0;
+      
+      if (dayNumber === 0) return; // Skip if we couldn't parse day
+      
+      allTides.push({
         type,
         time,
         date: dateStr,
         height: `${heightMeters.toFixed(2)} m`,
         heightMeters,
         heightFeet: heightMeters * 3.28084,
-      };
-      
-      // Categorize by day - check if it's today, tomorrow, or later
-      const dayMatch = dateStr.match(/(\d+)/);
-      if (dayMatch && dayMatch[1]) {
-        const day = parseInt(dayMatch[1]);
-        
-        if (day === todayDay) {
-          tides.today.push(tideData);
-        } else if (day === todayDay + 1 || (todayDay >= 28 && day === 1)) {
-          tides.tomorrow.push(tideData);
-        } else {
-          // Find or create day entry
-          let dayEntry = tides.nextDays.find(d => d.date === dateStr);
-          if (!dayEntry) {
-            dayEntry = { date: dateStr, tides: [] };
-            tides.nextDays.push(dayEntry);
-          }
-          dayEntry.tides.push(tideData);
-        }
-      }
+        dayNumber,
+      });
     });
     
-    console.log(`Scraped ${tides.today.length + tides.tomorrow.length} tides for ${locationName}`);
+    console.log(`Parsed ${allTides.length} total tides from page`);
     
-    if (tides.today.length === 0 && tides.tomorrow.length === 0) {
-      console.warn('No tide data extracted, falling back to calculated data');
+    if (allTides.length === 0) {
+      console.warn('No tide data extracted from HTML, falling back to calculated data');
       return null;
     }
+    
+    // Organize tides by day - use ACTUAL available data, not strict "today" matching
+    const now = new Date();
+    const todayDay = now.getDate();
+    
+    // Group tides by day number
+    const tidesByDay = new Map<number, TideData[]>();
+    allTides.forEach(tide => {
+      const { dayNumber, ...tideData } = tide;
+      if (!tidesByDay.has(dayNumber)) {
+        tidesByDay.set(dayNumber, []);
+      }
+      tidesByDay.get(dayNumber)!.push(tideData);
+    });
+    
+    // Get sorted day numbers
+    const dayNumbers = Array.from(tidesByDay.keys()).sort((a, b) => a - b);
+    
+    // Assign days intelligently:
+    // - If we have today's data, use it
+    // - If not, use the FIRST available day as "today" (most current data available)
+    if (tidesByDay.has(todayDay)) {
+      // Perfect! We have today's data
+      tides.today = tidesByDay.get(todayDay)!;
+      if (tidesByDay.has(todayDay + 1)) {
+        tides.tomorrow = tidesByDay.get(todayDay + 1)!;
+      }
+      // Rest go to nextDays
+      dayNumbers.forEach(day => {
+        if (day > todayDay + 1) {
+          const dayTides = tidesByDay.get(day)!;
+          tides.nextDays.push({
+            date: dayTides[0].date,
+            tides: dayTides,
+          });
+        }
+      });
+    } else {
+      // We don't have today - use FIRST available day as "today"
+      console.log(`Today (day ${todayDay}) not in data. Using day ${dayNumbers[0]} as current.`);
+      tides.today = tidesByDay.get(dayNumbers[0])!;
+      if (dayNumbers.length > 1) {
+        tides.tomorrow = tidesByDay.get(dayNumbers[1])!;
+      }
+      // Rest go to nextDays
+      for (let i = 2; i < dayNumbers.length; i++) {
+        const day = dayNumbers[i];
+        const dayTides = tidesByDay.get(day)!;
+        tides.nextDays.push({
+          date: dayTides[0].date,
+          tides: dayTides,
+        });
+      }
+    }
+    
+    console.log(`Scraped ${tides.today.length} today, ${tides.tomorrow.length} tomorrow, ${tides.nextDays.length} future days for ${locationName}`);
+    
+    // SUCCESS - we have real scraped data!
     
     return tides;
   } catch (error) {
@@ -192,9 +237,10 @@ function generateMockTideData(lat: number, lon: number, location: string): TideF
     baseDate.setDate(baseDate.getDate() + dayOffset);
     baseDate.setHours(0, 0, 0, 0);
 
-    // Base tide heights (meters) - vary by location
-    const baseHighTide = 2.0 * tidalRangeMultiplier;
-    const baseLowTide = 0.3 * tidalRangeMultiplier;
+    // Base tide heights (meters) - Philippine coastal values
+    // Philippines typically has mixed semidiurnal tides with moderate range
+    const baseHighTide = 1.5 * tidalRangeMultiplier; // ~1.2 to 1.8m typical
+    const baseLowTide = 0.4 * tidalRangeMultiplier;  // ~0.3 to 0.5m typical
     
     // Spring-neap cycle (approximately 14.76 days)
     const daysSinceNewMoon = (now.getTime() / (1000 * 60 * 60 * 24)) % 14.76;

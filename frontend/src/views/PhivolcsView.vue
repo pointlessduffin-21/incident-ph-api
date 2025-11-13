@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { usePhivolcsStore } from '../stores/phivolcs';
 import { RouterLink } from 'vue-router';
+import IframeModal from '../components/IframeModal.vue';
 
 const phivolcsStore = usePhivolcsStore();
+const showIframeModal = ref(false);
+
+const iframeUrl = computed(() => {
+  const baseUrl = window.location.origin;
+  return `${baseUrl}/phivolcs`;
+});
 
 onMounted(async () => {
   await phivolcsStore.fetchEarthquakes();
@@ -17,11 +24,24 @@ onMounted(async () => {
     <!-- Header -->
     <header class="bg-white shadow-sm border-b">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <RouterLink to="/" class="text-blue-600 hover:text-blue-800 mb-2 inline-block">
-          ← Back to Dashboard
-        </RouterLink>
-        <h1 class="text-3xl font-bold text-gray-900">PHIVOLCS</h1>
-        <p class="text-gray-600 mt-1">Philippine Institute of Volcanology and Seismology</p>
+        <div class="flex items-center justify-between">
+          <div>
+            <RouterLink to="/" class="text-blue-600 hover:text-blue-800 mb-2 inline-block">
+              ← Back to Dashboard
+            </RouterLink>
+            <h1 class="text-3xl font-bold text-gray-900">PHIVOLCS</h1>
+            <p class="text-gray-600 mt-1">Philippine Institute of Volcanology and Seismology</p>
+          </div>
+          <button 
+            @click="showIframeModal = true"
+            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center space-x-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span>Embed Widget</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -119,6 +139,16 @@ onMounted(async () => {
         </div>
       </div>
     </main>
+
+    <!-- Iframe Modal -->
+    <IframeModal
+      v-model="showIframeModal"
+      title="Embed PHIVOLCS Widget"
+      description="Copy the URL or embed code below to integrate the PHIVOLCS widget into your website or application."
+      :iframe-url="iframeUrl"
+      width="100%"
+      height="800"
+    />
   </div>
 </template>
 

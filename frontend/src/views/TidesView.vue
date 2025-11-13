@@ -15,16 +15,27 @@
               <p class="text-sm text-gray-600">Real-time tide predictions for Philippine coastal areas</p>
             </div>
           </div>
-          <button 
-            @click="refreshData"
-            :disabled="loading"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-          >
-            <svg class="w-4 h-4" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>Refresh</span>
-          </button>
+          <div class="flex items-center space-x-2">
+            <button 
+              @click="showIframeModal = true"
+              class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center space-x-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span>Embed Widget</span>
+            </button>
+            <button 
+              @click="refreshData"
+              :disabled="loading"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              <svg class="w-4 h-4" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
@@ -241,18 +252,35 @@
         </div>
       </div>
     </main>
+
+    <!-- Iframe Modal -->
+    <IframeModal
+      v-model="showIframeModal"
+      title="Embed Tide Forecast Widget"
+      description="Copy the URL or embed code below to integrate the tide forecast widget into your website or application."
+      :iframe-url="iframeUrl"
+      width="100%"
+      height="800"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { RouterLink } from 'vue-router';
+import IframeModal from '../components/IframeModal.vue';
 import * as tideService from '../services/tides';
 import type { TideForecast } from '../services/tides';
 
 const tideForecast = ref<TideForecast | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const showIframeModal = ref(false);
+
+const iframeUrl = computed(() => {
+  const baseUrl = window.location.origin;
+  return `${baseUrl}/tides`;
+});
 
 const nextTideInfo = computed(() => {
   if (!tideForecast.value || tideForecast.value.today.length === 0) {

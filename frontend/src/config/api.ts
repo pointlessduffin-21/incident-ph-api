@@ -20,6 +20,10 @@ export const ENDPOINTS = {
   
   // ACLED
   ACLED_INCIDENTS: '/acled/incidents',
+  
+  // TIDE
+  TIDE_FORECAST: (location: string) => `/tide/forecast/${location}`,
+  TIDE_LOCATIONS: '/tide/locations',
 } as const;
 
 

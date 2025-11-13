@@ -118,12 +118,14 @@
           :tide-direction="nextTideInfo.state"
           :next-tide="nextTideInfo.nextTide"
           :time-to-next-tide="nextTideInfo.timeToNextTide"
+          @openEmbed="showIframeModal = true"
         />
 
         <!-- Tide History Graph -->
         <TideHistoryGraph
           v-if="tideForecast"
           :forecast="tideForecast"
+          @openEmbed="showIframeModal = true"
         />
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -308,6 +310,14 @@
         </div>
       </div>
     </main>
+
+    <!-- Iframe Modal -->
+    <IframeModal 
+      v-model="showIframeModal"
+      title="Embed Lucena City Tide Widget"
+      description="Copy the code below to embed this tide widget on your website."
+      :iframe-url="iframeUrl"
+    />
   </div>
 </template>
 
@@ -318,6 +328,10 @@ import * as tideService from '../services/tides';
 import type { TideForecast } from '../services/tides';
 import TideLevelGauge from '../components/TideLevelGauge.vue';
 import TideHistoryGraph from '../components/TideHistoryGraph.vue';
+import IframeModal from '../components/IframeModal.vue';
+
+const showIframeModal = ref(false);
+const iframeUrl = computed(() => `${window.location.origin}/tides/lucena`);
 
 const tideForecast = ref<TideForecast | null>(null);
 const loading = ref(false);
