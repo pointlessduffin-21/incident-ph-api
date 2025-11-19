@@ -71,6 +71,61 @@ npm run start:prod
 
 The API will be available at `http://localhost:3000/api`
 
+## 🐳 Docker Deployment
+
+### Quick Start with Docker
+
+Deploy both frontend and backend with a single command:
+
+```bash
+# Linux/Mac
+./docker-deploy.sh
+
+# Windows
+docker-deploy.bat
+
+# Or manually
+docker-compose up -d
+```
+
+### What Gets Deployed
+
+- **Backend API** (NestJS) - Port 3000
+- **Frontend** (Vue.js + Nginx) - Port 80
+- **Automatic API Proxy** - Frontend `/api` routes to backend
+- **Health Checks** - Automatic container health monitoring
+- **Data Persistence** - `./data` directory mounted as volume
+
+### Access Points
+
+- **Frontend**: http://localhost
+- **Backend API**: http://localhost:3000/api
+- **API Documentation**: http://localhost:3000/api/docs
+
+### Docker Commands
+
+```bash
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Restart services
+docker-compose restart
+
+# Check status
+docker-compose ps
+
+# Rebuild images
+docker-compose build --no-cache
+```
+
+### Documentation
+
+- **[Docker Quick Start](DOCKER_QUICK_START.md)** - 3-step deployment guide
+- **[Complete Docker Guide](DOCKER_DEPLOYMENT.md)** - Full deployment documentation
+
 ## 📚 API Documentation
 
 ### Swagger UI (Interactive)

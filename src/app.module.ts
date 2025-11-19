@@ -5,10 +5,13 @@ import { ConfigModule } from '@nestjs/config';
 import { AcledModule } from './acled/acled.module';
 import { AppController } from './app.controller';
 import { MmdaModule } from './mmda/mmda.module';
+import { OpenWeatherModule } from './openweather/openweather.module';
 import { PagasaModule } from './pagasa/pagasa.module';
 import { PhivolcsModule } from './phivolcs/phivolcs.module';
+import { QWeatherModule } from './qweather/qweather.module';
 import { TideModule } from './tide/tide.module';
 import { TyphoonModule } from './typhoon/typhoon.module';
+import { WindyModule } from './windy/windy.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { TyphoonModule } from './typhoon/typhoon.module';
     AcledModule,
     TyphoonModule,
     TideModule,
+    OpenWeatherModule,
+    WindyModule,
+    QWeatherModule,
   ],
   controllers: [AppController],
 })

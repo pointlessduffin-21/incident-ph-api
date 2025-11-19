@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { TideService } from './tide.service';
 
 @ApiTags('Tide Forecasts')
-@Controller('api/tide')
+@Controller('tide')
 export class TideController {
   constructor(private readonly tideService: TideService) {}
 

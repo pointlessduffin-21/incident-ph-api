@@ -1,5 +1,33 @@
 [
   {
+    "text": "TROPICAL CYCLONE BULLETIN NR. 29 Tropical Depression #UwanPH (FUNG-WONG) Issued at 5:00 AM, 13 November 2025 Valid for broadcast until the next bulletin at 11:00 AM today. “UWAN” MAINTAINS ITS STRENGTH WHILE MOVING OVER THE SEA EAST OF TAIWAN. Link: tinyurl.com/TCB-UwanPH",
+    "timestamp": "2025-11-19T02:55:44.066Z",
+    "type": "tropical_cyclone",
+    "source": "PAGASA Twitter (proxy)",
+    "url": "https://x.com/dost_pagasa"
+  },
+  {
+    "text": "Thunderstorm Advisory No. 9 #NCR_PRSD Issued at: 5:42 AM, 19 November 2025(Wednesday) Moderate to heavy rainshowers with lightning and strong winds are expected over Quezon(Burdeos, Polillo, Panukulan, Patnanungan, Jomalig, General Nakar, Infanta) within the next 2 hours. All",
+    "timestamp": "2025-11-19T02:55:44.066Z",
+    "type": "warning",
+    "source": "PAGASA Twitter (proxy)",
+    "url": "https://x.com/dost_pagasa"
+  },
+  {
+    "text": "TROPICAL CYCLONE BULLETIN NR. 29 Tropical Depression #UwanPH (FUNG-WONG) Issued at 5:00 AM, 13 November 2025 Valid for broadcast until the next bulletin at 11:00 AM today. “UWAN” MAINTAINS ITS STRENGTH WHILE MOVING OVER THE SEA EAST OF TAIWAN. Link: tinyurl.com/TCB-UwanPH",
+    "timestamp": "2025-11-19T02:55:41.956Z",
+    "type": "tropical_cyclone",
+    "source": "PAGASA Twitter (proxy)",
+    "url": "https://x.com/dost_pagasa"
+  },
+  {
+    "text": "Thunderstorm Advisory No. 9 #NCR_PRSD Issued at: 5:42 AM, 19 November 2025(Wednesday) Moderate to heavy rainshowers with lightning and strong winds are expected over Quezon(Burdeos, Polillo, Panukulan, Patnanungan, Jomalig, General Nakar, Infanta) within the next 2 hours. All",
+    "timestamp": "2025-11-19T02:55:41.956Z",
+    "type": "warning",
+    "source": "PAGASA Twitter (proxy)",
+    "url": "https://x.com/dost_pagasa"
+  },
+  {
     "text": "TROPICAL CYCLONE BULLETIN NR. 26 Typhoon #TinoPH (KALMAEGI) Issued at 11:00 AM, 06 November 2025 Valid for broadcast until the next bulletin at 5:00 PM today. “TINO” CONTINUES TO INTENSIFY WHILE MOVING PAST KALAYAAN ISLANDS AND CLOSER TO VIETNAM. DOST-PAGASA Link:",
     "timestamp": "2025-11-06T06:52:35.625Z",
     "type": "tropical_cyclone",

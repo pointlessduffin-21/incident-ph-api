@@ -115,7 +115,7 @@
         <TideLevelGauge
           v-if="tideForecast"
           :tides="[...tideForecast.today, ...tideForecast.tomorrow]"
-          :tide-direction="nextTideInfo.state"
+          :tide-direction="(nextTideInfo.state as 'Unknown' | 'Rising' | 'Falling')"
           :next-tide="nextTideInfo.nextTide"
           :time-to-next-tide="nextTideInfo.timeToNextTide"
           @openEmbed="showIframeModal = true"

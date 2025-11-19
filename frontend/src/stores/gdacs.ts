@@ -31,8 +31,8 @@ export const useGdacsStore = defineStore('gdacs', () => {
         .map((f) => {
           const props = f?.properties || {};
           const coords = f?.geometry?.coordinates as [number, number] | undefined;
-          const cLon = coords?.[0] ?? props.lon;
-          const cLat = coords?.[1] ?? props.lat;
+          const cLon = coords?.[0] ?? (props as any).lon;
+          const cLat = coords?.[1] ?? (props as any).lat;
           if (typeof cLat !== 'number' || typeof cLon !== 'number') return null;
           const dist = haversineKm(lat, lon, cLat, cLon);
           return { ...props, lat: cLat, lon: cLon, distanceKm: Math.round(dist) };

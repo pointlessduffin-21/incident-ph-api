@@ -1,5 +1,5 @@
-import { Controller, Get, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Query, Logger, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { TyphoonService } from './typhoon.service';
 
 @ApiTags('Typhoon')
@@ -99,5 +99,38 @@ export class TyphoonController {
   async getGDACSData() {
     this.logger.log('GET /typhoon/gdacs - Fetching GDACS data');
     return await this.typhoonService.getGDACSData();
+  }
+
+  @Get('gdacs/nearby')
+  @ApiOperation({ 
+    summary: 'Get GDACS cyclones nearby',
+    description: 'Retrieves tropical cyclones from GDACS within a specified radius of coordinates.'
+  })
+  @ApiQuery({ name: 'lat', type: Number, description: 'Latitude', example: 13.964 })
+  @ApiQuery({ name: 'lon', type: Number, description: 'Longitude', example: 121.747 })
+  @ApiQuery({ name: 'radius', type: Number, required: false, description: 'Radius in kilometers', example: 1500 })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Successfully retrieved nearby GDACS cyclones' 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid coordinates' 
+  })
+  async getGDACSNearby(
+    @Query('lat') lat: string,
+    @Query('lon') lon: string,
+    @Query('radius') radius?: string,
+  ) {
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lon);
+    const radiusKm = radius ? parseFloat(radius) : 1500;
+
+    if (isNaN(latitude) || isNaN(longitude)) {
+      throw new BadRequestException('Invalid latitude or longitude');
+    }
+
+    this.logger.log(`GET /typhoon/gdacs/nearby - lat: ${latitude}, lon: ${longitude}, radius: ${radiusKm}km`);
+    return await this.typhoonService.getGDACSNearby(latitude, longitude, radiusKm);
   }
 }

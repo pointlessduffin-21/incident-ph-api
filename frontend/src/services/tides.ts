@@ -166,28 +166,35 @@ async function scrapeTideForecast(url: string, locationName: string, lat: number
       // Rest go to nextDays
       dayNumbers.forEach(day => {
         if (day > todayDay + 1) {
-          const dayTides = tidesByDay.get(day)!;
+        const dayTides = tidesByDay.get(day);
+        if (dayTides && dayTides[0]) {
           tides.nextDays.push({
             date: dayTides[0].date,
             tides: dayTides,
           });
         }
+        }
       });
     } else {
       // We don't have today - use FIRST available day as "today"
       console.log(`Today (day ${todayDay}) not in data. Using day ${dayNumbers[0]} as current.`);
-      tides.today = tidesByDay.get(dayNumbers[0])!;
+      const todayTides = tidesByDay.get(dayNumbers[0]);
+      if (todayTides) tides.today = todayTides;
+      
       if (dayNumbers.length > 1) {
-        tides.tomorrow = tidesByDay.get(dayNumbers[1])!;
+        const tomorrowTides = tidesByDay.get(dayNumbers[1]);
+        if (tomorrowTides) tides.tomorrow = tomorrowTides;
       }
       // Rest go to nextDays
       for (let i = 2; i < dayNumbers.length; i++) {
         const day = dayNumbers[i];
-        const dayTides = tidesByDay.get(day)!;
-        tides.nextDays.push({
-          date: dayTides[0].date,
-          tides: dayTides,
-        });
+        const dayTides = tidesByDay.get(day);
+        if (dayTides && dayTides[0]) {
+          tides.nextDays.push({
+            date: dayTides[0].date,
+            tides: dayTides,
+          });
+        }
       }
     }
     

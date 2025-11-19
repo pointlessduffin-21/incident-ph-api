@@ -330,11 +330,14 @@ const tideCurvePath = computed(() => {
   const xScale = svgWidth / (points.length - 1);
   const heightRange = maxHeight.value - minHeight.value || 1;
   
+  if (!points[0]) return '';
   let path = `M 0 ${svgHeight - ((points[0].height - minHeight.value) / heightRange) * svgHeight}`;
   
   for (let i = 1; i < points.length; i++) {
     const x = i * xScale;
-    const y = svgHeight - ((points[i].height - minHeight.value) / heightRange) * svgHeight;
+    const point = points[i];
+    if (!point) continue;
+    const y = svgHeight - ((point.height - minHeight.value) / heightRange) * svgHeight;
     path += ` L ${x} ${y}`;
   }
   
@@ -359,7 +362,7 @@ const tidePoints = computed(() => {
     isExtreme: boolean 
   }> = [];
   
-  const xScale = svgWidth / (timePoints.value.length - 1);
+  // const xScale = svgWidth / (timePoints.value.length - 1);
   const heightRange = maxHeight.value - minHeight.value || 1;
   
   // Mark actual high and low tides

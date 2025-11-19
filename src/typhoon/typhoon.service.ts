@@ -262,6 +262,74 @@ export class TyphoonService {
     }
   }
 
+  async getGDACSNearby(lat: number, lon: number, radiusKm: number = 1500) {
+    const cacheKey = `typhoon:gdacs:nearby:${lat.toFixed(2)}:${lon.toFixed(2)}:${radiusKm}`;
+
+    try {
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      const allCyclones = await this.fetchGDACSData();
+      
+      // Filter by distance using haversine formula
+      const nearbyCyclones = allCyclones
+        .map((cyclone) => {
+          if (!cyclone.coordinates) return null;
+          
+          const distance = this.haversineKm(
+            lat,
+            lon,
+            cyclone.coordinates.lat,
+            cyclone.coordinates.lon,
+          );
+          
+          return {
+            ...cyclone,
+            distanceKm: Math.round(distance),
+          };
+        })
+        .filter((c) => c !== null && c.distanceKm <= radiusKm)
+        .sort((a, b) => a.distanceKm - b.distanceKm);
+
+      const response = {
+        success: true,
+        count: nearbyCyclones.length,
+        data: nearbyCyclones,
+        location: { lat, lon },
+        radiusKm,
+        timestamp: new Date().toISOString(),
+        source: 'GDACS',
+      };
+
+      await this.cacheManager.set(cacheKey, response, 900000);
+      return response;
+    } catch (error) {
+      this.logger.error('Error fetching GDACS nearby cyclones:', error.message);
+      return {
+        success: false,
+        count: 0,
+        data: [],
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  private haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const toRad = (v: number) => (v * Math.PI) / 180;
+    const R = 6371; // km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
   private extractUrl(html: string, regex: RegExp): string | null {
     const match = html.match(regex);
     return match ? match[1] : null;

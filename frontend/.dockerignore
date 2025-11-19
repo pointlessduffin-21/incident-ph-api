@@ -6,7 +6,6 @@ yarn-error.log
 # Build outputs
 dist
 build
-*.tsbuildinfo
 
 # Environment files
 .env
@@ -28,11 +27,6 @@ Thumbs.db
 .git
 .gitignore
 
-# Documentation
-docs
-*.md
-!README.md
-
 # Test files
 test
 tests
@@ -40,15 +34,6 @@ tests
 *.spec.ts
 coverage
 
-# Frontend
-frontend/node_modules
-frontend/dist
-frontend/.vite
+# Vite cache
+.vite
 
-# Data files (will be mounted as volume)
-data/*.json
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore

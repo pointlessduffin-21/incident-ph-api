@@ -32,12 +32,16 @@ A comprehensive REST API providing real-time access to Philippine government ser
 - **ACLED** - Conflict and incident reports for the Philippines
 - **Typhoon Tracking** - Real-time tropical cyclone data from JTWC and GDACS
 - **Tide Forecasts** - Coastal tide predictions for Philippine locations
+- **OpenWeather** - Comprehensive weather data and alerts
+- **Windy** - Wind forecasts and typhoon risk analysis
+- **QWeather** - Weather warnings and alerts
 
 ## Features
-- Intelligent caching (5-30 min TTL)
+- Intelligent caching (5 min - 6 hours TTL)
 - Multiple data source fallbacks
 - Robust error handling
 - RESTful API design
+- Complete frontend-backend integration
 
 ## Data Sources
 - MMDA: [@mmda Twitter](https://x.com/mmda)
@@ -47,6 +51,9 @@ A comprehensive REST API providing real-time access to Philippine government ser
 - JTWC: [RSS Feed](https://www.metoc.navy.mil/jtwc/rss/jtwc.rss)
 - GDACS: [API](https://www.gdacs.org/gdacsapi/)
 - Tide Forecast: [tide-forecast.com](https://www.tide-forecast.com)
+- OpenWeather: [API](https://openweathermap.org/api)
+- Windy: [API](https://api.windy.com)
+- QWeather: [API](https://dev.qweather.com)
     `)
     .setVersion('1.2.0')
     .addTag('API Info', 'General API information and available endpoints')
@@ -56,6 +63,9 @@ A comprehensive REST API providing real-time access to Philippine government ser
     .addTag('ACLED Incidents', 'Armed Conflict Location & Event Data')
     .addTag('Typhoon', 'Real-time tropical cyclone tracking and forecasts')
     .addTag('Tide Forecasts', 'Coastal tide predictions for Philippine locations')
+    .addTag('OpenWeather', 'Comprehensive weather data and alerts from OpenWeather API')
+    .addTag('Windy', 'Wind forecasts and typhoon risk analysis from Windy.com')
+    .addTag('QWeather', 'Weather warnings and alerts from QWeather API')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);

@@ -130,7 +130,7 @@
                             :src="typhoon.trackImageUrl" 
                             :alt="`${typhoon.name} track forecast`"
                             class="w-full rounded border border-gray-200 hover:border-blue-400 transition cursor-pointer"
-                            @click="window.open(typhoon.trackImageUrl, '_blank')"
+                            @click="() => { if (typeof window !== 'undefined') window.open(typhoon.trackImageUrl, '_blank') }"
                           />
                         </div>
                       </details>
@@ -150,7 +150,7 @@
                             :src="typhoon.satelliteImageUrl" 
                             :alt="`${typhoon.name} satellite imagery`"
                             class="w-full rounded border border-gray-200 hover:border-blue-400 transition cursor-pointer"
-                            @click="window.open(typhoon.satelliteImageUrl, '_blank')"
+                            @click="() => { if (typeof window !== 'undefined') window.open(typhoon.satelliteImageUrl, '_blank') }"
                           />
                         </div>
                       </details>
@@ -229,14 +229,14 @@
                   <div class="text-sm text-gray-600 mt-1">
                     Feels like {{ Math.round(weatherStore.currentWeather.feels_like) }}°C
                   </div>
-                  <div v-if="weatherStore.currentWeather.weather.length" class="mt-2">
+                  <div v-if="weatherStore.currentWeather.weather && weatherStore.currentWeather.weather.length" class="mt-2">
                     <img
-                      :src="weatherStore.getWeatherIcon(weatherStore.currentWeather.weather[0].icon)"
-                      :alt="weatherStore.currentWeather.weather[0].description"
+                      :src="weatherStore.getWeatherIcon(weatherStore.currentWeather.weather[0]?.icon || '')"
+                      :alt="weatherStore.currentWeather.weather[0]?.description || ''"
                       class="w-12 h-12 mx-auto"
                     />
                     <div class="text-xs text-gray-700 capitalize">
-                      {{ weatherStore.currentWeather.weather[0].description }}
+                      {{ weatherStore.currentWeather.weather[0]?.description || '' }}
                     </div>
                   </div>
                 </div>
@@ -299,9 +299,9 @@
                       {{ new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' }) }}
                     </div>
                     <img
-                      v-if="day.weather.length"
-                      :src="weatherStore.getWeatherIcon(day.weather[0].icon)"
-                      :alt="day.weather[0].description"
+                      v-if="day.weather && day.weather.length"
+                      :src="weatherStore.getWeatherIcon(day.weather[0]?.icon || '')"
+                      :alt="day.weather[0]?.description || ''"
                       class="w-8 h-8"
                     />
                   </div>
@@ -377,7 +377,7 @@ onMounted(async () => {
   await weatherStore.fetchAllData();
   
   // Set up auto-refresh based on settings
-  const refreshMinutes = settingsStore.dataRefreshInterval;
+  const refreshMinutes = settingsStore.pollInterval / 60000; // Convert ms to minutes
   if (refreshMinutes > 0) {
     refreshInterval = window.setInterval(() => {
       weatherStore.fetchAllData();

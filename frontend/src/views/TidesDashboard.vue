@@ -264,7 +264,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useTideStore } from '../stores/tides';
 import * as tideService from '../services/tides';
@@ -304,7 +304,7 @@ function getNextHighTide(): string {
   ].filter(t => t.type === 'High Tide');
   
   if (allTides.length === 0) return '--:--';
-  return allTides[0].time;
+  return allTides[0]?.time || '--:--';
 }
 
 function getNextLowTide(): string {
@@ -314,7 +314,7 @@ function getNextLowTide(): string {
   ].filter(t => t.type === 'Low Tide');
   
   if (allTides.length === 0) return '--:--';
-  return allTides[0].time;
+  return allTides[0]?.time || '--:--';
 }
 
 function getLastUpdated(): string {

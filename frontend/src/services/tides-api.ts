@@ -149,6 +149,14 @@ export function getCurrentTideState(tides: TideDay[]): {
   }
 
   const nextEvent = futureEvents[0];
+  if (!nextEvent) {
+    return {
+      state: 'Unknown' as const,
+      nextTide: null,
+      timeToNextTide: 'N/A',
+    };
+  }
+  
   const timeDiff = nextEvent.dateTime.getTime() - now.getTime();
   const hours = Math.floor(timeDiff / (1000 * 60 * 60));
   const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
@@ -215,8 +223,8 @@ export function estimateCurrentTideHeight(tides: TideDay[]): {
   allEvents.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
 
   // Find the two events that bracket the current time
-  let prevEvent: typeof allEvents[0] | null = null;
-  let nextEvent: typeof allEvents[0] | null = null;
+  let prevEvent: { event: TideEvent; dateTime: Date } | null = null;
+  let nextEvent: { event: TideEvent; dateTime: Date } | null = null;
 
   for (let i = 0; i < allEvents.length; i++) {
     if (allEvents[i].dateTime <= now) {

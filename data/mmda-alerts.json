@@ -1,5 +1,165 @@
 [
   {
+    "text": "MMDA ALERT: Road crash incident at Commonwealth Don Enrique WB involving motorcycle as of 2:44 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-19T02:44:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at CP Garcia near footbridge SB involving truck as of 11:42 PM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T23:42:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Multiple collision at Commonwealth Luzon WB involving closed van and two motorcycles as of 11:42 PM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T23:42:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at Commonwealth Philcoa EB involving van and truck as of 10:36 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T10:36:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at Sales Rotonda WB involving car and motorcycle as of 10:12 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T10:12:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at Greenmeadows NB involving car and dump truck as of 10:06 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T10:06:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at Quezon Ave Maxima WB involving 2 pickup as of 10:04 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T10:04:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at Bonifacio Cloverleaf NB involving car and closed van as of 10:04 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T10:04:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at C5 Bagong Ilog Flyover NB involving car and SUV as of 10:00 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T10:00:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at EDSA Oliveros NB involving car and SUV as of 8:43 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T08:43:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at Elliptical Quezon Ave WB involving motorcycle and SUV as of 8:34 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T08:34:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Stalled SUV due to mechanical problem at EDSA SM North SB as of 8:14 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T08:14:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at Quezon Ave Araneta tunnel WB involving motorcycle and pickup as of 8:14 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T08:14:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at B. Serrano 12th Ave WB involving motorcycle and van as of 8:12 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T08:12:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at C5 Ortigas SB involving SUV and car as of 7:51 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T07:51:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at C5 Calle Industria NB involving SUV and car as of 7:09 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T07:09:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash accident at RMB Pureza WB involving trailer truck and motorcycle as of 6:29 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T06:29:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at Roxas Blvd, in-front of Banko Central NB involving motorcycle and car as of 5:40 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T05:40:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Multiple collision at Congressional Mindanao Ave. Intersection involving 2motorcycles and SUV as of 5:29 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T05:29:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
+    "text": "MMDA ALERT: Road crash incident at EDSA Magsaysay SB involving motorcycle as of 5:13 AM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
+    "timestamp": "2025-11-18T05:13:00.000Z",
+    "url": "https://x.com/mmda",
+    "type": "mmda_alert",
+    "source": "MMDA Twitter (@MMDA)",
+    "lastSeen": "2025-11-19T02:52:51.699Z"
+  },
+  {
     "text": "MMDA ALERT: Road crash incident at Regalado Highway K & M Paint Center SB involving MC and closed van as of 1:42 PM. One lane occupied. MMDA enforcers are on site managing traffic. #mmda",
     "timestamp": "2025-11-06T05:42:00.000Z",
     "url": "https://x.com/mmda",
