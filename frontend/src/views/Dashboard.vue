@@ -4,16 +4,42 @@ import { RouterLink } from 'vue-router';
 import { useMMDAStore } from '../stores/mmda';
 import { usePagasaStore } from '../stores/pagasa';
 import { usePhivolcsStore } from '../stores/phivolcs';
-import { useAcledStore } from '../stores/acled';
 import { useSettingsStore } from '../stores/settings';
+import { ref } from 'vue';
+import * as tideService from '../services/tides-api';
 
 const mmdaStore = useMMDAStore();
 const pagasaStore = usePagasaStore();
 const phivolcsStore = usePhivolcsStore();
-const acledStore = useAcledStore();
 const settingsStore = useSettingsStore();
 
+// Tide data state
+const tideForecast = ref<any>(null);
+const tideLoading = ref(false);
+const tideError = ref<string | null>(null);
+
 let intervalId: number | null = null;
+
+const fetchTideData = async () => {
+  tideLoading.value = true;
+  tideError.value = null;
+  try {
+    // Fetch tide forecast for Cordova (default location)
+    const data = await tideService.getCordovaTideForecast();
+    tideForecast.value = data;
+  } catch (err: any) {
+    console.error('Tide fetch error:', err);
+    // Only show error if it's not a network/server error (might be temporary)
+    if (err.response?.status === 500 || err.code === 'ERR_NETWORK') {
+      tideError.value = 'Tide service temporarily unavailable. Please try again later.';
+    } else {
+      tideError.value = err.message || 'Failed to fetch tide data';
+    }
+    tideForecast.value = null;
+  } finally {
+    tideLoading.value = false;
+  }
+};
 
 const fetchAllData = async () => {
   await Promise.all([
@@ -22,7 +48,7 @@ const fetchAllData = async () => {
     pagasaStore.fetchSevereWeather(),
     phivolcsStore.fetchLatestEarthquake(),
     phivolcsStore.fetchVolcanoes(),
-    acledStore.fetchIncidents(10),
+    fetchTideData(),
   ]);
 };
 
@@ -266,41 +292,69 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- ACLED Widget -->
+        <!-- Tides Widget -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
-          <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4 flex items-center justify-between">
+          <div class="bg-gradient-to-r from-cyan-500 to-teal-600 px-6 py-4 flex items-center justify-between">
             <div class="flex items-center">
               <svg class="w-8 h-8 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
-              <h3 class="text-xl font-bold text-white">ACLED Incidents</h3>
+              <h3 class="text-xl font-bold text-white">🌊 Tide Forecast</h3>
             </div>
-            <RouterLink to="/acled" class="text-white hover:text-purple-100 text-sm">View All →</RouterLink>
+            <RouterLink to="/tides" class="text-white hover:text-cyan-100 text-sm">View All →</RouterLink>
           </div>
           <div class="p-6">
-            <div v-if="acledStore.loading" class="text-center py-8 text-gray-500">
-              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-              <p class="mt-2">Loading incidents...</p>
+            <div v-if="tideLoading" class="text-center py-8 text-gray-500">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
+              <p class="mt-2">Loading tide data...</p>
             </div>
-            <div v-else-if="acledStore.incidents && acledStore.incidents.incidents" class="space-y-3 max-h-96 overflow-y-auto">
-              <div v-if="acledStore.incidents.incidents.length === 0" class="text-center py-8 text-gray-500">
-                No incidents reported
+            <div v-else-if="tideError" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+              {{ tideError }}
+            </div>
+            <div v-else-if="tideForecast" class="space-y-4 max-h-96 overflow-y-auto">
+              <!-- Location Info -->
+              <div class="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-lg p-4 border border-cyan-200">
+                <h4 class="font-bold text-gray-900 mb-2">{{ tideForecast.location }}</h4>
+                <p class="text-xs text-gray-600">{{ tideForecast.timezone }}</p>
               </div>
-              <div
-                v-for="(incident, index) in acledStore.incidents.incidents.slice(0, 5)"
-                :key="index"
-                class="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
-              >
-                <div class="flex justify-between items-start mb-2">
-                  <h4 class="font-semibold text-gray-900 text-sm">{{ incident.eventType }}</h4>
-                  <span v-if="incident.fatalities" class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
-                    {{ incident.fatalities }} fatalities
-                  </span>
+
+              <!-- Today's Tides -->
+              <div v-if="tideForecast.tides && tideForecast.tides.length > 0">
+                <h4 class="font-semibold text-gray-700 mb-2 text-sm">Today's Tides</h4>
+                <div class="space-y-2">
+                  <div
+                    v-for="(day, dayIndex) in tideForecast.tides.slice(0, 1)"
+                    :key="dayIndex"
+                    class="space-y-2"
+                  >
+                    <div
+                      v-for="(event, eventIndex) in (day.events || []).slice(0, 4)"
+                      :key="eventIndex"
+                      class="flex items-center justify-between p-2 bg-white border border-gray-200 rounded-lg"
+                    >
+                      <div class="flex items-center space-x-2">
+                        <span class="text-lg">
+                          {{ event.type === 'High Tide' ? '⬆️' : '⬇️' }}
+                        </span>
+                        <div>
+                          <p class="text-sm font-semibold text-gray-900">{{ event.type }}</p>
+                          <p class="text-xs text-gray-600">{{ event.time }}</p>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <p class="text-sm font-bold text-cyan-600">{{ event.heightMeters || event.height }}m</p>
+                        <p class="text-xs text-gray-500">{{ event.heightFeet || '' }}ft</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p class="text-xs text-gray-600 mb-1">{{ incident.admin1 }}, {{ incident.location }}</p>
-                <p class="text-xs text-gray-500">{{ incident.eventDate }}</p>
               </div>
+              <div v-else class="text-center py-8 text-gray-500 text-sm">
+                No tide data available
+              </div>
+            </div>
+            <div v-else class="text-center py-8 text-gray-500 text-sm">
+              No tide forecast loaded
             </div>
           </div>
         </div>
@@ -317,7 +371,7 @@ onUnmounted(() => {
           <li><strong>MMDA:</strong> Metro Manila traffic alerts and highway information</li>
           <li><strong>PAGASA:</strong> Weather forecasts, severe weather warnings, and tropical cyclone bulletins</li>
           <li><strong>PHIVOLCS:</strong> Earthquake data and volcano status monitoring</li>
-          <li><strong>ACLED:</strong> Conflict and incident reports across the Philippines</li>
+          <li><strong>Tides:</strong> Coastal tide predictions for Philippine locations with high/low tide times and heights</li>
         </ul>
       </div>
     </main>

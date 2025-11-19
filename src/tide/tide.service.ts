@@ -73,9 +73,10 @@ export class TideService {
     } catch (error) {
       this.logger.error(
         `Error fetching tide data for ${locationSlug}:`,
-        error.message,
+        error,
       );
-      throw new Error(`Failed to fetch tide forecast: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to fetch tide forecast: ${errorMessage}`);
     }
   }
 
